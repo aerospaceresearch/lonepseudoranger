@@ -42,41 +42,22 @@ void processSignalData()
         long double timestamp = (*iter).getTimestamp();
 
 //        std::cout << "size of signal: " << (*iter).getSize() << std::endl;
-        if( (*iter).getSize() >= 4 && (*iter).getTimestamp()>1352 && (*iter).getTimestamp()<1353 )
+        if( (*iter).getSize() >= 4 ) //&& (*iter).getTimestamp()>1352 && (*iter).getTimestamp()<1353 )
         {
             std::cout << std::endl << "***********************************************************************************" << std::endl;
             std::cout << "For satellite " << (*iter).getSatId() << " and sending time " << (*iter).getTimestamp() << " there are " << (*iter).getSize() << " GS" << std::endl;
 //            (*iter).printSignal();
             Stations mStations;
-            
             (*iter).convertSignalToStation( mStations );
-
             std::vector< std::vector< int > > stationsComb;
             
-  //          std::cout << "Number of ground stations: " << mStations.size() << std::endl;
             PositionsList xyzr;
-            //xyzr.addPositions( solveApol( satId, timestamp, mStations ) );
-            
             int N = mStations.size();
-            std::cout << "N = " << N << std::endl;
-        /*    if( N>5 )
-            {
-                for( int i=0; i<N-5; ++i )
-                {
-                    Stations aStations;
-                    for( int j=0; j<5; ++j )
-                    {
-                        aStations.addStation( mStations.getStation( i+j ) );
-                    }
-                    xyzr.addPositions( solveApol( satId, timestamp, aStations ) );
-                }
-            }*/
-            
             xyzr.addPositions( solveApol( satId, timestamp, mStations ) );
 
             if( N>5 )
             {
-                int k = N-1;
+                int k = N-1; // for testing now. will be configurable
 //                std::cout << "For satellite " << satId << ", "<< N << " ground stations and time of sending signal " << timestamp << " I want to set of satellites of size: ";
 //                std::cin >> k;
 
@@ -115,11 +96,12 @@ void processSignalData()
         }
         else
         {
-    //        std::cout << "For satellite " << (*iter).getSatId() << " with sending time " << (*iter).getTimestamp() << " only " << (*iter).getSize() << " GS found" << std::endl;
+            // TODO: trilateration for 3 gs
         }
     }
     lResultFile.close();
 }
+
 /** loading data from file "stations.txt"
  *  @param lFileName a name of file which contains data
  *  @param mStations a contener of stations 

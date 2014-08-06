@@ -1,9 +1,4 @@
-#include <iostream>
-#include <vector>
-#include <stdlib.h>
-
 #include "GaussianMatrix.h"
-
    
 GaussianMatrix::GaussianMatrix( std::vector< std::vector< double > > aData )
 : mData( aData )

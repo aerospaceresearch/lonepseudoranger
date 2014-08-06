@@ -12,7 +12,6 @@ class GaussianMatrix
   public:
     GaussianMatrix(){}
     GaussianMatrix( std::vector< std::vector< double > >  aData );
-//    void setData( Matrix aMatrix );
     void setData( std::vector< std::vector< double > >  aData );
     void overdetermined();
     void makeGaussian();
