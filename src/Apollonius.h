@@ -13,11 +13,8 @@
 
 #include "Def.h"
 #include "GaussianMatrix.h"
-#include "Matrix.h"
 
 std::vector< Signal > mSignals;
-class Matrix;
-
 
 /** solving Apollonius problem for set of stations
  *  @aStations a vector which contains stations
