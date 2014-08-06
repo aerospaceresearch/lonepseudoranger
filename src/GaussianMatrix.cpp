@@ -23,20 +23,12 @@ std::vector< double > GaussianMatrix::getRow( int index )
 // unused:
 void GaussianMatrix::setData( std::vector< std::vector< double > >  aData )
 {
-    std::cout << "setting data! " << std::endl;
     mData = aData;
-    printData(); 
     if( mData.size() > 4 )
     {
-        std::cout << "overdetermination!" << std::endl;
         overdetermined();
-        printData();
-        std::cout << "after overdetermination" << std::endl;
     }
-    std::cout << "Making Gaussian: " << std::endl;
     makeGaussian();
-    std::cout << "After Gaussian: " << std::endl;
-    printData(); 
 }
  
 void GaussianMatrix::swapRows( int first, int second )
@@ -119,10 +111,9 @@ int GaussianMatrix::getColsNb()
 
 void GaussianMatrix::overdetermined()
 {
-    std::cout << "GaussianMatrix::overdetermined(): " << std::endl;
     int newN = 4;
     int N = getRowsNb();
-    printData();
+  //  printData();
     double A[N][4];
     double b[N];
 
@@ -179,8 +170,7 @@ void GaussianMatrix::overdetermined()
         mData[i][4] = ATb[i];
     }
 
-    printData();
-    std::cout << "end of overdetermination!" << std::endl;
+  //  printData();
 }
 
 void GaussianMatrix::makeGaussian()
@@ -200,7 +190,7 @@ void GaussianMatrix::makeGaussian()
        }
         if( iMax == 0 )
         {
-            std::cout << "ERROR! MATRIX IS SINGULAR!" << std::endl;
+//            std::cout << "ERROR! MATRIX IS SINGULAR!" << std::endl;
             break;
         }
         else{
@@ -249,8 +239,7 @@ void GaussianMatrix::makeGaussian()
         }
    }
 
-   std::cout << "Gaussian: " << std::endl;
-   printData();
+   //printData();
 }
 
 void GaussianMatrix::makeGaussian2()

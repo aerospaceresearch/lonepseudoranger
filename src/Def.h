@@ -46,8 +46,7 @@ class Station
     , z( az )
     , r( aR )
     {
-     //   setR( at0 );
-        std::cout << "time of sending of a new signal: " << at0 << std::endl;
+        //std::cout << "time of sending of a new signal: " << at0 << std::endl;
     }
 
     Station( std::vector< double > vec )

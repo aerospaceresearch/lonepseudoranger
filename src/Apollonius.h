@@ -1,3 +1,6 @@
+#ifndef APOLLONIOUS_H
+#define APOLLONIUS_H
+
 #include <iostream>
 #include <fstream>
 #include <list>
@@ -21,15 +24,15 @@ class Matrix;
  */
 PositionsList solveApol( int aSatId, long double aTimestamp, Stations aStations ) 
 {
-    std::cout << std::endl << "Solving Apollonius problem for positions: " << std::endl;
+/*    std::cout << std::endl << "Solving Apollonius problem for positions: " << std::endl;
     for( int i=0; i < aStations.size(); ++i )
     {
         std::cout << "      " << aStations.getStation(i).getX() << ", " << aStations.getStation(i).getY() << ", " << aStations.getStation(i).getZ() << std::endl;
     }
-
+*/
     
     std::vector< std::tuple< int, int, int, int > > Si;
-    Si.push_back( std::make_tuple( 1, 1, 1, 1 ) );
+//    Si.push_back( std::make_tuple( 1, 1, 1, 1 ) );
     Si.push_back( std::make_tuple(-1,-1,-1,-1 ) );
     
 
@@ -52,7 +55,7 @@ PositionsList solveApol( int aSatId, long double aTimestamp, Stations aStations 
     PositionsList calculatedPositions;
     std::vector< std::vector< double > >  matrix;
 
-    std::cout << "Macierz: " << std::endl;
+    std::cout << "Matrix: " << std::endl;
     for( int i=1; i<aStations.size() ; ++i )
     {
         double dx = aStations.getStation(i).getX()-aStations.getStation(i-1).getX();
@@ -66,22 +69,20 @@ PositionsList solveApol( int aSatId, long double aTimestamp, Stations aStations 
 		     r2-r1+pow(aStations.getStation(i-1).getR(),2) - pow(aStations.getStation(i).getR(),2)};
 
         matrix.push_back( row );
-        std::cout << row.at(0) << " " << row.at(1) << " " << row.at(2) << " " << row.at(3) << std::endl; 
+        std::cout << "    " << row.at(0) << " " << row.at(1) << " " << row.at(2) << " " << row.at(3) << std::endl; 
     }
 
     if( aStations.size() > 4 )
     {
             GaussianMatrix tempMatrix( matrix );
-            tempMatrix.printData();
+            //tempMatrix.printData();
             if( aStations.size()>5 )
             {
-                std::cout << "overdetermination: " << std::endl;
                 tempMatrix.overdetermined();
             }
-            std::cout << "after overdetermination: " << std::endl;
-            tempMatrix.printData();
+            //tempMatrix.printData();
             tempMatrix.makeGaussian();
-            tempMatrix.printData();
+            //tempMatrix.printData();
             double xs = tempMatrix.get(0,4);
             double ys = tempMatrix.get(1,4);
             double zs = tempMatrix.get(2,4);
@@ -89,13 +90,13 @@ PositionsList solveApol( int aSatId, long double aTimestamp, Stations aStations 
          
             std::vector< double > solution = { xs, ys, zs, rs };
             calculatedPositions.addPosition( solution );
-            std::cout << aSatId << " timestamp=" << aTimestamp << " " << xs << " " << ys << " " << std::setprecision(20) <<  zs/* << " " << rs*/ << std::endl << std::endl;
+            std::cout << aSatId << " timestamp=" << aTimestamp << " " << xs << " " << ys << " " << std::setprecision(20) <<  zs << " " << rs << std::endl;
     }
     else
     {
         double M,N,P,Q,R,S,a,b,c,rs,xs,ys,zs;
         GaussianMatrix gaussMatrix( matrix );
-        std::cout << "gaussian: " << std::endl;
+ //       std::cout << "gaussian: " << std::endl;
         gaussMatrix.makeGaussian();
         M = gaussMatrix(1,5);
         N = -(gaussMatrix(1,4));
@@ -135,7 +136,7 @@ PositionsList solveApol( int aSatId, long double aTimestamp, Stations aStations 
             std::vector< double > solution = { xs, ys, zs, rs };
             calculatedPositions.addPosition( solution );
 
-            std::cout <<  "timestamp=" << aTimestamp << " " << xs << " " << ys << " " << zs << std::endl << std::endl;
+            std::cout <<  "timestamp=" << aTimestamp << " " << xs << " " << ys << " " << zs << std::endl;
         }
 
         rs = p2 ;
@@ -148,7 +149,7 @@ PositionsList solveApol( int aSatId, long double aTimestamp, Stations aStations 
             std::vector< double > solution2 = { xs, ys, zs, rs };
             calculatedPositions.addPosition( solution2 );
     
-            std::cout << "timestamp=" << aTimestamp << " " << xs << " " << ys << " " << zs << std::endl << std::endl;
+            std::cout << "timestamp=" << aTimestamp << " " << xs << " " << ys << " " << zs << std::endl;
         }
         tempcalculatedPositions=calculatedPositions;
     } 
@@ -156,4 +157,6 @@ PositionsList solveApol( int aSatId, long double aTimestamp, Stations aStations 
 
     return tempcalculatedPositions;
 }
+
+#endif //APOLLONIUS
 
