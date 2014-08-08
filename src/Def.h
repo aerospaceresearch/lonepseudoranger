@@ -8,7 +8,7 @@
 #include <tuple>
 
 /// Row type
-typedef std::vector< double > Row;
+typedef std::vector< long double > Row;
 /// Matrix type
 //typedef std::vector< Row > Matrix;
 /**
@@ -63,7 +63,6 @@ class Station
      */
     void setR( long double aT0 ) 
     {
-    //    double clight = 300000000; // [m/s]
         double clight = 299792458; // [m/s]
     	dt = t-aT0;
 	    r = dt*clight;
@@ -207,7 +206,7 @@ class Stations
     long double mT;
 };
 
-typedef std::array< double, 4 > Position; // xs,ys,zs,rs from Apollonius 
+typedef std::array< long double, 4 > Position; // xs,ys,zs,rs from Apollonius 
 
 /**
  * @brief Class which stores list of positions.
@@ -236,7 +235,7 @@ class PositionsList
      * @brief Adding position using its coordinates.
      * @param aPosVec vector of coordinates.
      */
-    void addPosition( std::vector< double > aPosVec ) 
+    void addPosition( std::vector< long double > aPosVec ) 
     {
     	Position aPosition = { aPosVec.at(0), aPosVec.at(1), aPosVec.at(2), aPosVec.at(3) };
         mPositions.push_back( aPosition ); 
@@ -282,25 +281,25 @@ class PositionsList
      * @brief Getting coordinate x of given position.
      * @param aIndex index of position which coordinate is returned
      */
-    double getX( int aIndex ) { return mPositions.at(aIndex).at(0); }
+    long double getX( int aIndex ) { return mPositions.at(aIndex).at(0); }
 
     /**
      * @brief Getting coordinate y of given position.
      * @param aIndex index of position which coordinate is returned
      */
-    double getY( int aIndex ) { return mPositions.at(aIndex).at(1); }
+    long double getY( int aIndex ) { return mPositions.at(aIndex).at(1); }
 
     /**
      * @brief Getting coordinate z of given position.
      * @param aIndex index of position which coordinate is returned
      */
-    double getZ( int aIndex ) { return mPositions.at(aIndex).at(2); }
+    long double getZ( int aIndex ) { return mPositions.at(aIndex).at(2); }
 
     /**
      * @brief Getting distance between vehicle and ground station.
      * @param aIndex index of position
      */
-    double getR( int aIndex ) { return mPositions.at(aIndex).at(3); }
+    long double getR( int aIndex ) { return mPositions.at(aIndex).at(3); }
 
     /**
      * @brief Printing data of all positions on the list.
@@ -320,7 +319,7 @@ class PositionsList
      */
     void printAveragePosition()
     {
-        double x = 0, y = 0, z = 0;
+        long double x = 0, y = 0, z = 0;
     	int positionsNb = mPositions.size();
     	std::vector< Position >::iterator iter;
         for( iter = mPositions.begin(); iter != mPositions.end(); ++iter )

@@ -42,7 +42,6 @@ uint64_t Combinations::nextBitCombination( uint64_t currentBitCombination )
  */
 std::vector< std::vector< int > > Combinations::getStationsCombinations( int n, int k )
 {
-    std::cout << "looking for combination: (" << n << ", " << k << ")" << std::endl;
   uint64_t v = initialBitCombination( n, k ); // current permutation of bits
   uint64_t lastCombination = ( v<<(n-k) );  
   uint64_t w = v; 

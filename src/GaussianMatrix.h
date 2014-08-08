@@ -5,24 +5,24 @@
 #include <vector>
 #include <stdlib.h>
 
-typedef std::vector< double > Row;
+typedef std::vector< long double > Row;
 
 class GaussianMatrix
 {
   public:
     GaussianMatrix(){}
-    GaussianMatrix( std::vector< std::vector< double > >  aData );
-    void setData( std::vector< std::vector< double > >  aData );
+    GaussianMatrix( std::vector< std::vector< long double > >  aData );
+    void setData( std::vector< std::vector< long double > >  aData );
     void overdetermined();
     void makeGaussian();
     void makeGaussian2();
     void printData();
-    double operator() ( int r, int c ){ return (mData.at(r-1)).at(c-1); } 
+    long double operator() ( int r, int c ){ return (mData.at(r-1)).at(c-1); } 
     int getRowsNb();
     int getColsNb();
-    std::vector< double > getRow( int index );
-    void addRow( std::vector< double > );
-    double get( int row, int col ){ return (mData.at(row)).at(col); }
+    std::vector< long double > getRow( int index );
+    void addRow( std::vector< long double > );
+    long double get( int row, int col ){ return (mData.at(row)).at(col); }
 
   private:
     void swapRows( int first, int second );

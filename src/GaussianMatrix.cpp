@@ -1,22 +1,22 @@
 #include "GaussianMatrix.h"
    
-GaussianMatrix::GaussianMatrix( std::vector< std::vector< double > > aData )
+GaussianMatrix::GaussianMatrix( std::vector< std::vector< long double > > aData )
 : mData( aData )
 {
 }
 
-void GaussianMatrix::addRow( std::vector< double > aRow ) 
+void GaussianMatrix::addRow( std::vector< long double > aRow ) 
 {
     mData.push_back( aRow );
 }
 
-std::vector< double > GaussianMatrix::getRow( int index )
+std::vector< long double > GaussianMatrix::getRow( int index )
 {
     return mData.at(index);
 }
 
 // unused:
-void GaussianMatrix::setData( std::vector< std::vector< double > >  aData )
+void GaussianMatrix::setData( std::vector< std::vector< long double > >  aData )
 {
     mData = aData;
     if( mData.size() > 4 )
@@ -50,7 +50,7 @@ int GaussianMatrix::findMaxRow( int col )
 
 void GaussianMatrix::multiply( int col )
 {
-    double coefficient;
+    long double coefficient;
     for( int i = 0; i<getRowsNb(); ++i )
     {
       coefficient = get(i,col);
@@ -80,7 +80,7 @@ void GaussianMatrix::subtractRow( int row )
 
 void GaussianMatrix::makeDiagonalOnes()
 {
-    double coefficient;
+    long double coefficient;
     for( int i = 0; i < mData.size(); ++i )
     {
 	if( get(i,i) != 0 && get(i,i) !=1 )
@@ -109,8 +109,8 @@ void GaussianMatrix::overdetermined()
     int newN = 4;
     int N = getRowsNb();
   //  printData();
-    double A[N][4];
-    double b[N];
+    long double A[N][4];
+    long double b[N];
 
     for( int i=0; i<N; ++i )
     {
@@ -128,8 +128,8 @@ void GaussianMatrix::overdetermined()
         mData[i].resize( 5 );
     }
 
-    double ATA[newN][4];
-    double ATb[newN];
+    long double ATA[newN][4];
+    long double ATb[newN];
     for( int i=0; i<newN; ++i )
     {
         ATb[i] = 0;
@@ -146,6 +146,7 @@ void GaussianMatrix::overdetermined()
                 ATA[i][j] = ATA[i][j] + A[k][i]*A[k][j];
             }
         }
+        std::cout << std::endl;
     }
 
     for( int i=0; i<newN; ++i )
@@ -154,6 +155,7 @@ void GaussianMatrix::overdetermined()
         {
             ATb[i] = ATb[i] + A[k][i]*b[k];
         }
+
     }
 
     for( int i=0; i<newN; ++i )
@@ -174,7 +176,7 @@ void GaussianMatrix::makeGaussian()
    {
        // Find pivot for column k:
        int iMaxPos = k;
-       double iMax = (mData.at(k)).at(k);
+       long double iMax = (mData.at(k)).at(k);
        for( int j=k; j<getRowsNb(); ++j )
        {
            if( iMax < abs((mData.at(j)).at(k)) )
@@ -207,7 +209,7 @@ void GaussianMatrix::makeGaussian()
    {
         if( (mData.at(k)).at(k) != 0 )
         {
-            double temp = (mData.at(k)).at(k);
+            long double temp = (mData.at(k)).at(k);
             for( int j=0; j<getColsNb(); ++j )
             {
                 (mData.at(k)).at(j) = (mData.at(k)).at(j)/temp;
@@ -224,7 +226,7 @@ void GaussianMatrix::makeGaussian()
                 // odjecie j-tego wiersza pomnozonego przez (mData.at(k)).at(j)
                 if( (mData.at(j)).at(j) != 0 )
                 {
-                    double temp = (mData.at(k)).at(j);
+                    long double temp = (mData.at(k)).at(j);
                     for( int i=k; i<getColsNb(); ++i )
                     {
                         (mData.at(k)).at(i) = (mData.at(k)).at(i) - (mData.at(j)).at(i)*temp;

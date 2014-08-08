@@ -41,12 +41,10 @@ void processSignalData()
         int satId = (*iter).getSatId();
         long double timestamp = (*iter).getTimestamp();
 
-//        std::cout << "size of signal: " << (*iter).getSize() << std::endl;
-        if( (*iter).getSize() >= 4 ) //&& (*iter).getTimestamp()>1352 && (*iter).getTimestamp()<1353 )
+        if( (*iter).getSize() >= 4 ) 
         {
             std::cout << std::endl << "***********************************************************************************" << std::endl;
             std::cout << "For satellite " << (*iter).getSatId() << " and sending time " << (*iter).getTimestamp() << " there are " << (*iter).getSize() << " GS" << std::endl;
-//            (*iter).printSignal();
             Stations mStations;
             (*iter).convertSignalToStation( mStations );
             std::vector< std::vector< int > > stationsComb;
@@ -57,7 +55,7 @@ void processSignalData()
 
             if( N>5 )
             {
-                int k = N-1; // for testing now. will be configurable
+                int k = N-1;
 //                std::cout << "For satellite " << satId << ", "<< N << " ground stations and time of sending signal " << timestamp << " I want to set of satellites of size: ";
 //                std::cin >> k;
 
@@ -65,7 +63,7 @@ void processSignalData()
                 std::cout << stationsComb.size() << " combinations" << std::endl;
                 std::vector< std::vector< int > >::iterator iterSt;
                 int pos = 0;
-                for( iterSt = stationsComb.begin(); iterSt != stationsComb.end()/* && pos<10*/ ; ++iterSt )
+                for( iterSt = stationsComb.begin(); iterSt != stationsComb.end(); ++iterSt )
                 {
                     std::cout << std::endl << ++pos << "/" << stationsComb.size() << ": " ;
                     Stations aStations;
@@ -120,11 +118,12 @@ void Reader::loadGSData( const char* lFileName )
 
     double ax, ay, az;
     long double at0, adt;
-    int satId = 0; // TODO: tymczasowo 0
+    int satId = 0; 
     std::string op1;
     while( lFile >> ax >> ay >> az >> adt >> at0 ) //>> satId ) // >> at0 >> satId >> op1  )
     {
     //    std::cout << lFileName << " " << at0 << ", x, y, z: " << ax << " " << ay << " " << az << std::endl;
+
         bool satKnown = false;
         std::vector< Signal >::iterator iter;
         for( iter = mSignals.begin(); !satKnown && iter != mSignals.end(); ++iter )
@@ -162,6 +161,8 @@ void Reader::loadFromDirectory( char* lDirName )
     struct dirent *dirEnt;
     struct stat filestat;
     dir = opendir( lDirName );
+
+    std::string fileFormat(".gsd");
     if( dir == NULL )
     {
         std::cout << "ERROR: Problem with directory" << std::endl;
@@ -175,8 +176,15 @@ void Reader::loadFromDirectory( char* lDirName )
             if( stat( file.c_str(), &filestat )) continue;
             if( S_ISDIR( filestat.st_mode ) ) continue;
 
-//            std::cout << "Processing file: " << file << std::endl;
-            loadGSData( file.c_str() );          
+            if( file.substr( file.size()-4, 4) == std::string(".gsd") )
+            {
+                std::cout << "Processing file: " << file << std::endl;
+                loadGSData( file.c_str() );          
+            }
+            else
+            {
+                std::cout << "File " << file << " does not have proper format! " << std::endl;
+            }
 
         }
         closedir( dir );
