@@ -41,7 +41,7 @@ void processSignalData()
         int satId = (*iter).getSatId();
         long double timestamp = (*iter).getTimestamp();
 
-        if( (*iter).getSize() >= 4 ) 
+        if( (*iter).getSize() >= 4 && timestamp<1313 && timestamp>1312 ) 
         {
             std::cout << std::endl << "***********************************************************************************" << std::endl;
             std::cout << "For satellite " << (*iter).getSatId() << " and sending time " << (*iter).getTimestamp() << " there are " << (*iter).getSize() << " GS" << std::endl;
@@ -56,6 +56,8 @@ void processSignalData()
             if( N>5 )
             {
                 int k = N-1;
+                k = 4;
+                std::cout << "timestamp= N=" << N << ", k=" << k << std::endl;
 //                std::cout << "For satellite " << satId << ", "<< N << " ground stations and time of sending signal " << timestamp << " I want to set of satellites of size: ";
 //                std::cin >> k;
 
@@ -63,7 +65,7 @@ void processSignalData()
                 std::cout << stationsComb.size() << " combinations" << std::endl;
                 std::vector< std::vector< int > >::iterator iterSt;
                 int pos = 0;
-                for( iterSt = stationsComb.begin(); iterSt != stationsComb.end(); ++iterSt )
+                for( iterSt = stationsComb.begin(); iterSt != stationsComb.end()/* && pos<10*/; ++iterSt )
                 {
                     std::cout << std::endl << ++pos << "/" << stationsComb.size() << ": " ;
                     Stations aStations;

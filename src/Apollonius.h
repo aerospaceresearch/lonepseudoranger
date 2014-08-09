@@ -29,7 +29,7 @@ PositionsList solveApol( int aSatId, long double aTimestamp, Stations aStations 
 
     
     std::vector< std::tuple< int, int, int, int > > Si;
-//    Si.push_back( std::make_tuple( 1, 1, 1, 1 ) );
+    Si.push_back( std::make_tuple( 1, 1, 1, 1 ) );
     Si.push_back( std::make_tuple(-1,-1,-1,-1 ) );
     
 
@@ -106,7 +106,6 @@ PositionsList solveApol( int aSatId, long double aTimestamp, Stations aStations 
         long double z1 = aStations.getStation(0).getZ();
         long double r1 = aStations.getStation(0).getR();
 
-        std::cout << "timestamp = " << aTimestamp << ": " << gaussMatrix(1,1) << " " << gaussMatrix(2,2) << " " << gaussMatrix(3,3) << std::endl;
         a = N*N+Q*Q+S*S-1;
         b = 2*(M-x1)*N+2*(P-y1)*Q+2*(R-z1)*S-2*r1;
         c = (M-x1)*(M-x1)+(P-y1)*(P-y1)+(R-z1)*(R-z1)-r1*r1;
@@ -121,32 +120,24 @@ PositionsList solveApol( int aSatId, long double aTimestamp, Stations aStations 
 
         }
 
-        int rEarth = 6371000;
         rs = p1 ;
         xs = M+N*rs;
         ys = P+Q*rs;
         zs = R+S*rs;
     
-        if( sqrt( xs*xs+ys*ys+zs*zs ) > rEarth )
-        {
-            std::vector< long double > solution = { xs, ys, zs, rs };
-            calculatedPositions.addPosition( solution );
-
-            std::cout <<  "timestamp=" << aTimestamp << " " << xs << " " << ys << " " << zs << " " << rs << std::endl;
-        }
+        std::vector< long double > solution = { xs, ys, zs, rs };
+        calculatedPositions.addPosition( solution );
+        std::cout <<  "timestamp=" << aTimestamp << " " << xs << " " << ys << " " << zs << " " << rs << std::endl;
 
         rs = p2 ;
         xs = M+N*rs;
         ys = P+Q*rs;
         zs = R+S*rs;
 
-        if( sqrt( xs*xs+ys*ys+zs*zs ) > rEarth )
-        {
-            std::vector< long double > solution2 = { xs, ys, zs, rs };
-            calculatedPositions.addPosition( solution2 );
-    
-            std::cout << "timestamp=" << aTimestamp << " " << xs << " " << ys << " " << zs << " " << rs << std::endl;
-        }
+        std::vector< long double > solution2 = { xs, ys, zs, rs };
+        calculatedPositions.addPosition( solution2 );
+        std::cout << "timestamp=" << aTimestamp << " " << xs << " " << ys << " " << zs << " " << rs << std::endl;
+
         tempcalculatedPositions=calculatedPositions;
     } 
 }
