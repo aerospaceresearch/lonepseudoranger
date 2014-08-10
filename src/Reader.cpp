@@ -19,6 +19,7 @@
 #include "GaussianMatrix.h"
 #include "Apollonius.h"
 
+void cluster( PositionsList aList );
 /**  
  * processing of all collected signals
  */
@@ -56,7 +57,8 @@ void processSignalData()
             if( N>5 )
             {
                 int k = N-1;
-                k = 4;
+                k = 5;
+                std::cout << "size: " << xyzr.size() << std::endl;
                 std::cout << "timestamp= N=" << N << ", k=" << k << std::endl;
 //                std::cout << "For satellite " << satId << ", "<< N << " ground stations and time of sending signal " << timestamp << " I want to set of satellites of size: ";
 //                std::cin >> k;
@@ -67,12 +69,12 @@ void processSignalData()
                 int pos = 0;
                 for( iterSt = stationsComb.begin(); iterSt != stationsComb.end()/* && pos<10*/; ++iterSt )
                 {
-                    std::cout << std::endl << ++pos << "/" << stationsComb.size() << ": " ;
+//                    std::cout << std::endl << ++pos << "/" << stationsComb.size() << ": " ;
                     Stations aStations;
                     for( int i=0; i<k; ++i )
                     {
                         aStations.addStation( mStations.getStation( (*iterSt).at(i) ) );
-                        std::cout << (*iterSt).at(i) << " ";
+  //                      std::cout << (*iterSt).at(i) << " ";
                     }
                     std::cout << std::endl;
 /*                    for( int i=0; i<5; ++i )
@@ -83,8 +85,8 @@ void processSignalData()
                         std::cout << std::endl;
                     }*/
                     xyzr.addPositions( solveApol( satId, timestamp, aStations ) );
-
                 }
+                cluster( xyzr );
             }
            
            /* 

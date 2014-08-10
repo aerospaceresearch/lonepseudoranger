@@ -6,6 +6,7 @@
 #include <array> 
 #include <string>
 #include <tuple>
+#include <cmath>
 
 /// Row type
 typedef std::vector< long double > Row;
@@ -229,7 +230,10 @@ class PositionsList
      * @brief Adding position to the list.
      * @param aPosition position which is added
      */
-    void addPosition( Position aPosition ) { mPositions.push_back( aPosition ); }
+    void addPosition( Position aPosition )
+    {
+        mPositions.push_back( aPosition );
+    }
 
     /**
      * @brief Adding position using its coordinates.
@@ -237,8 +241,16 @@ class PositionsList
      */
     void addPosition( std::vector< long double > aPosVec ) 
     {
-    	Position aPosition = { aPosVec.at(0), aPosVec.at(1), aPosVec.at(2), aPosVec.at(3) };
-        mPositions.push_back( aPosition ); 
+        if( aPosVec.size() > 3 )
+        {
+            Position aPosition = { aPosVec.at(0), aPosVec.at(1), aPosVec.at(2), aPosVec.at(3) };
+            mPositions.push_back( aPosition ); 
+        }
+        else
+        {
+            Position aPosition = { aPosVec.at(0), aPosVec.at(1), aPosVec.at(2), 0 };
+            mPositions.push_back( aPosition ); 
+        }
     }
 
     /**
@@ -300,6 +312,16 @@ class PositionsList
      * @param aIndex index of position
      */
     long double getR( int aIndex ) { return mPositions.at(aIndex).at(3); }
+
+    long double getDistance( int aIndexFirst, int aIndexSecond )
+    {
+        long double distance = 0;
+        long double dx = getX( aIndexFirst ) - getX( aIndexSecond );
+        long double dy = getY( aIndexFirst ) - getY( aIndexSecond );
+        long double dz = getZ( aIndexFirst ) - getZ( aIndexSecond );
+        distance = sqrt( dx*dx+dy*dy+dz*dz );
+        return distance;
+    }
 
     /**
      * @brief Printing data of all positions on the list.

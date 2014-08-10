@@ -21,20 +21,20 @@ std::vector< Signal > mSignals;
  */
 PositionsList solveApol( int aSatId, long double aTimestamp, Stations aStations ) 
 {
-    std::cout << std::endl << "Solving Apollonius problem for positions: " << std::endl;
+ /*   std::cout << std::endl << "Solving Apollonius problem for positions: " << std::endl;
     for( int i=0; i < aStations.size(); ++i )
     {
         std::cout << "      " << aStations.getStation(i).getX() << ", " << aStations.getStation(i).getY() << ", " << aStations.getStation(i).getZ() << ", " << aStations.getStation(i).getR() << "; " << std::endl;
     }
-
+*/
     
     std::vector< std::tuple< int, int, int, int > > Si;
-    Si.push_back( std::make_tuple( 1, 1, 1, 1 ) );
+//    Si.push_back( std::make_tuple( 1, 1, 1, 1 ) );
     Si.push_back( std::make_tuple(-1,-1,-1,-1 ) );
     
 
     int stN = aStations.size();
-    PositionsList tempcalculatedPositions;
+    PositionsList calculatedPositions;
     std::vector< std::tuple< int, int, int, int > >::iterator it;
     it = Si.begin();
     for( it = Si.begin(); it != Si.end(); ++it )
@@ -49,26 +49,25 @@ PositionsList solveApol( int aSatId, long double aTimestamp, Stations aStations 
         s[2]=std::get<2>(*it);
         s[3]=std::get<3>(*it);
 
-    PositionsList calculatedPositions;
-    std::vector< std::vector< long double > >  matrix;
+        std::vector< std::vector< long double > >  matrix;
 
-    std::cout << "Matrix: " << std::endl;
-    for( int i=1; i<aStations.size() ; ++i )
-    {
-        long double dx = aStations.getStation(i).getX()-aStations.getStation(i-1).getX();
-        long double dy = aStations.getStation(i).getY()-aStations.getStation(i-1).getY();
-        long double dz = aStations.getStation(i).getZ()-aStations.getStation(i-1).getZ();
-        long double dr = aStations.getStation(i).getR()-aStations.getStation(i-1).getR();
+        //std::cout << "Matrix: " << std::endl;
+        for( int i=1; i<aStations.size() ; ++i )
+        {
+            long double dx = aStations.getStation(i).getX()-aStations.getStation(i-1).getX();
+            long double dy = aStations.getStation(i).getY()-aStations.getStation(i-1).getY();
+            long double dz = aStations.getStation(i).getZ()-aStations.getStation(i-1).getZ();
+            long double dr = aStations.getStation(i).getR()-aStations.getStation(i-1).getR();
 
-        long double r1 = pow(aStations.getStation(i-1).getX(),2)+ pow(aStations.getStation(i-1).getY(),2) + pow(aStations.getStation(i-1).getZ(),2);
-        long double r2 = pow(aStations.getStation( i ).getX(),2) + pow(aStations.getStation( i ).getY(),2) + pow(aStations.getStation( i ).getZ(),2);
-        Row row = { dx*2, dy*2, dz*2, 2*(s[i-1]*aStations.getStation(i-1).getR()-s[i]*aStations.getStation(i).getR()), 
+            long double r1 = pow(aStations.getStation(i-1).getX(),2)+ pow(aStations.getStation(i-1).getY(),2) + pow(aStations.getStation(i-1).getZ(),2);
+            long double r2 = pow(aStations.getStation( i ).getX(),2) + pow(aStations.getStation( i ).getY(),2) + pow(aStations.getStation( i ).getZ(),2);
+            Row row = { dx*2, dy*2, dz*2, 2*(s[i-1]*aStations.getStation(i-1).getR()-s[i]*aStations.getStation(i).getR()), 
 		     r2-r1+pow(aStations.getStation(i-1).getR(),2) - pow(aStations.getStation(i).getR(),2)};
 
-        matrix.push_back( row );
-        std::cout << "    " << row.at(0) << " " << row.at(1) << " " << row.at(2) << " " << row.at(3) << " " << row.at(4) << std::endl; 
+            matrix.push_back( row );
+          //  std::cout << "    " << row.at(0) << " " << row.at(1) << " " << row.at(2) << " " << row.at(3) << " " << row.at(4) << std::endl; 
 
-    }
+        }
 
     if( aStations.size() > 4 )
     {
@@ -113,6 +112,7 @@ PositionsList solveApol( int aSatId, long double aTimestamp, Stations aStations 
         long double p1 = (-b-sqrt(b*b-4*a*c))/(2*a);
         long double p2 = (-b+sqrt(b*b-4*a*c))/(2*a);
 
+        // workaround
         if( b*b < 4*a*c )
         {
             p1 = (-b)/(2*a);
@@ -137,12 +137,10 @@ PositionsList solveApol( int aSatId, long double aTimestamp, Stations aStations 
         std::vector< long double > solution2 = { xs, ys, zs, rs };
         calculatedPositions.addPosition( solution2 );
         std::cout << "timestamp=" << aTimestamp << " " << xs << " " << ys << " " << zs << " " << rs << std::endl;
-
-        tempcalculatedPositions=calculatedPositions;
     } 
 }
 
-    return tempcalculatedPositions;
+    return calculatedPositions;
 }
 
 #endif //APOLLONIUS
