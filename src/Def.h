@@ -25,7 +25,7 @@ class Station
      * @param az coordinate z
      * @param at time of receiving signal
      */
-    Station( double ax, double ay, double az, long double at )
+    Station( double ax, double ay, double az, long double at = 0 )
     : x( ax )
     , y( ay )
     , z( az )
@@ -41,11 +41,12 @@ class Station
      * @param at0 time of sending signal
      * @param atR time of receiving signal
      */
-    Station( double ax, double ay, double az, long double at0, long double aR )
+    Station( double ax, double ay, double az, long double at0, long double aR, double aDelay=0 )
     : x( ax )
     , y( ay )
     , z( az )
     , r( aR )
+    , delay( aDelay )
     {
         //std::cout << "time of sending of a new signal: " << at0 << std::endl;
     }
@@ -92,6 +93,9 @@ class Station
      * @return radius r
      */
     double getR() const { return r; }
+
+    double getDelay() const { return delay; }
+    
     void addToZ( int a )
     {
         z = z+a;
@@ -114,6 +118,7 @@ class Station
     long double t;  ///< Time of receiving signal.
     double r;  ///< Distance of vehicle from the station at time t-dt.
     long double dt; ///< Difference between time of receiving signal by ground station and sending by the vehicle.
+    double delay;
 };
 
 /**
@@ -197,6 +202,23 @@ class Stations
 	    std::cout << std::endl;
     }
 
+    void printDelayStats( int aSatId, double aTimestamp )
+    {
+        double minDelay = 100, maxDelay = 0, sumDelay = 0;
+        std::vector< Station >::iterator itDelays;
+        for( itDelays = mStations.begin(); itDelays != mStations.end(); ++itDelays )
+        {
+            double current = (*itDelays).getDelay();
+            sumDelay += current;
+            if( current > maxDelay )
+                maxDelay = current;
+            if( current < minDelay )
+                minDelay = current;
+        }
+        std::cout << "Delays after clustering: " << aSatId << " " << aTimestamp << " " << sumDelay/mStations.size() << " " << minDelay << " " << maxDelay << std::endl;
+ 
+    }
+
     void clear()
     {
         mStations.clear();
@@ -207,7 +229,8 @@ class Stations
     long double mT;
 };
 
-typedef std::array< long double, 4 > Position; // xs,ys,zs,rs from Apollonius 
+typedef std::array< long double, 5 > Position; // xs,ys,zs,rs from Apollonius, combination id 
+//typedef std::array< long double, 4 > Position; // xs,ys,zs,rs from Apollonius 
 
 /**
  * @brief Class which stores list of positions.
@@ -239,16 +262,21 @@ class PositionsList
      * @brief Adding position using its coordinates.
      * @param aPosVec vector of coordinates.
      */
-    void addPosition( std::vector< long double > aPosVec ) 
+    void addPosition( std::vector< long double > aPosVec, std::vector< int > combSt = {0} ) 
     {
-        if( aPosVec.size() > 3 )
+        if( aPosVec.size() == 5 )
         {
-            Position aPosition = { aPosVec.at(0), aPosVec.at(1), aPosVec.at(2), aPosVec.at(3) };
+            Position aPosition = { aPosVec.at(0), aPosVec.at(1), aPosVec.at(2), aPosVec.at(3), aPosVec.at(4) }; 
+            mPositions.push_back( aPosition ); 
+        } 
+        else if( aPosVec.size() > 3 )
+        {
+            Position aPosition = { aPosVec.at(0), aPosVec.at(1), aPosVec.at(2), aPosVec.at(3), 0 }; // TODO: improve last 0
             mPositions.push_back( aPosition ); 
         }
         else
         {
-            Position aPosition = { aPosVec.at(0), aPosVec.at(1), aPosVec.at(2), 0 };
+            Position aPosition = { aPosVec.at(0), aPosVec.at(1), aPosVec.at(2), 0, 0 };
             mPositions.push_back( aPosition ); 
         }
     }
@@ -312,6 +340,7 @@ class PositionsList
      * @param aIndex index of position
      */
     long double getR( int aIndex ) { return mPositions.at(aIndex).at(3); }
+    long double getCombId( int aIndex ) { return mPositions.at(aIndex).at(4); }
 
     long double getDistance( int aIndexFirst, int aIndexSecond )
     {
@@ -370,25 +399,26 @@ public:
     }
     void addGroundStation( double ax, double ay, double az, double ar )
     {
-        mGroundStations.push_back( std::make_tuple( ax, ay, az, ar ) );
+        mGroundStations.push_back( std::make_tuple( ax, ay, az, ar, 0 ) );
     }
 
-    void addGroundStation( double ax, double ay, double az, long double at0, double adt )
+    void addGroundStation( double ax, double ay, double az, long double at0, double adt, double aDelay=0 )
     {
     //    std::cout << "Signal::addGroundStation(): mTimestamp = " << mTimestamp << std::endl;
         double clight = 299792458; // [m/s]
         double r = clight*adt;
-        mGroundStations.push_back( std::make_tuple( ax, ay, az, r ) );
+        mGroundStations.push_back( std::make_tuple( ax, ay, az, r, aDelay ) );
     //    std::cout << "Signal::addGroundStation(): r = " << r << std::endl;
     }
 
     void convertSignalToStation( Stations& aStations )
     {
-        std::vector< std::tuple< double, double, double, double > >::iterator it;
+        // tuple< x, y, z, r, delay
+        std::vector< std::tuple< double, double, double, double, double > >::iterator it;
         for( it = mGroundStations.begin(); it != mGroundStations.end(); ++it )
         {
       //      std::cout << "Signal::convertSignalToStation(): " << std::get<3>(*it) << std::endl;
-            Station lStation( std::get<0>(*it), std::get<1>(*it), std::get<2>(*it), mTimestamp, std::get<3>(*it) );
+            Station lStation( std::get<0>(*it), std::get<1>(*it), std::get<2>(*it), mTimestamp, std::get<3>(*it), std::get<4>(*it) );
             aStations.addStation( lStation );
         }
     }
@@ -396,7 +426,7 @@ public:
     bool positionKnown ( double ax, double ay, double az )
     {
         bool isKnown = false;
-        std::vector< std::tuple< double, double, double, double > >::iterator it;
+        std::vector< std::tuple< double, double, double, double, double > >::iterator it;
         for( it = mGroundStations.begin(); it != mGroundStations.end(); ++it )
         {
             if( std::get<0>(*it) == ax &&
@@ -410,12 +440,12 @@ public:
     void printSignal()
     {
         std::cout << "Satellite Id: " << mSatId << ", time of sending singal: " << mTimestamp << std::endl;
-        std::vector< std::tuple< double, double, double, double > >::iterator iter;
+        std::vector< std::tuple< double, double, double, double, double > >::iterator iter;
         int lCounter = 0;
         for( iter = mGroundStations.begin(); iter < mGroundStations.end(); ++iter )
         {
             std::cout << ++lCounter << ". Position (" <<  std::get<0>(*iter) << ", " << std::get<1>(*iter) << ", " ;
-            std::cout << std::get<2>(*iter) << "). Distance: " << std::get<3>(*iter) << std::endl;
+            std::cout << std::get<2>(*iter) << "). Distance: " << std::get<3>(*iter) << ". Delay: " << std::get<4>(*iter) << std::endl;
         }
     }
     void setSatId( int aId ){ mSatId = aId; }
@@ -423,11 +453,26 @@ public:
     int getSatId() const { return mSatId; }
     long double getTimestamp() const { return mTimestamp; }
     int getSize() const { return mGroundStations.size(); }
+    void printDelayStats() 
+    {
+        double minDelay = 100, maxDelay = 0, sumDelay = 0;
+        std::vector< std::tuple< double, double, double, double, double > >::iterator itDelays;
+        for( itDelays = mGroundStations.begin(); itDelays != mGroundStations.end(); ++itDelays )
+        {
+            double current = std::get<4>(*itDelays);
+            sumDelay += current;
+            if( current > maxDelay )
+                maxDelay = current;
+            if( current < minDelay )
+                minDelay = current;
+        }
+        std::cout << "delafte " << mSatId << " " << mTimestamp << " " << sumDelay/mGroundStations.size() << " " << minDelay << " " << maxDelay << std::endl;
+    }
 
 private: 
     int mSatId; 
     long double mTimestamp; 
-    std::vector< std::tuple< double, double, double, double > > mGroundStations;
+    std::vector< std::tuple< double, double, double, double, double > > mGroundStations;
 };
 
 

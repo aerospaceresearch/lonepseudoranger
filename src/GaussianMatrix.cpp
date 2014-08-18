@@ -146,7 +146,6 @@ void GaussianMatrix::overdetermined()
                 ATA[i][j] = ATA[i][j] + A[k][i]*A[k][j];
             }
         }
-        std::cout << std::endl;
     }
 
     for( int i=0; i<newN; ++i )

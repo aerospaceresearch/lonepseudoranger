@@ -74,7 +74,7 @@ std::vector< std::vector< int > > Combinations::getStationsCombinations( int n, 
     } 
     stationsCombinations.push_back( currentStations );
   }
-  std::cout << "Found " << stationsCombinations.size() << std::endl;
+  std::cout << "Found " << stationsCombinations.size() << " combinations." << std::endl;
   return stationsCombinations;
 }
 

@@ -14,13 +14,17 @@
 #include "Def.h"
 #include "GaussianMatrix.h"
 
+bool debug = false; 
+
 std::vector< Signal > mSignals;
 
 /** solving Apollonius problem for set of stations
  *  @aStations a vector which contains stations
  */
-PositionsList solveApol( int aSatId, long double aTimestamp, Stations aStations ) 
+PositionsList solveApol( int aSatId, long double aTimestamp, Stations aStations, int combId=0, bool print=true, std::vector< int > combSt = { 0 } ) 
 {
+//    if( aStations.size() > 20 )
+        debug = true;
  /*   std::cout << std::endl << "Solving Apollonius problem for positions: " << std::endl;
     for( int i=0; i < aStations.size(); ++i )
     {
@@ -83,9 +87,10 @@ PositionsList solveApol( int aSatId, long double aTimestamp, Stations aStations 
             long double zs = tempMatrix.get(2,4);
             long double rs = tempMatrix.get(3,4);
          
-            std::vector< long double > solution = { xs, ys, zs, rs };
+            std::vector< long double > solution = { xs, ys, zs, rs, combId };
             calculatedPositions.addPosition( solution );
-            std::cout << aSatId << " timestamp=" << aTimestamp << " " << xs << " " << ys << " " << std::setprecision(20) <<  zs << " " << rs << std::endl;
+            if( print )
+                std::cout << aSatId << " timestamp=" << aTimestamp << " " << std::setprecision(20) <<  xs << " " << ys << " " << std::setprecision(20) <<  zs << " " << rs << std::endl;
     }
     else
     {
@@ -125,18 +130,20 @@ PositionsList solveApol( int aSatId, long double aTimestamp, Stations aStations 
         ys = P+Q*rs;
         zs = R+S*rs;
     
-        std::vector< long double > solution = { xs, ys, zs, rs };
+        std::vector< long double > solution = { xs, ys, zs, rs, combId };
         calculatedPositions.addPosition( solution );
-        std::cout <<  "timestamp=" << aTimestamp << " " << xs << " " << ys << " " << zs << " " << rs << std::endl;
+        if( print )
+            std::cout <<  "timestamp=" << aTimestamp << " " << xs << " " << ys << " " << zs << " " << rs << std::endl;
 
         rs = p2 ;
         xs = M+N*rs;
         ys = P+Q*rs;
         zs = R+S*rs;
 
-        std::vector< long double > solution2 = { xs, ys, zs, rs };
+        std::vector< long double > solution2 = { xs, ys, zs, rs, combId };
         calculatedPositions.addPosition( solution2 );
-        std::cout << "timestamp=" << aTimestamp << " " << xs << " " << ys << " " << zs << " " << rs << std::endl;
+        if( print )
+            std::cout << "timestamp=" << aTimestamp << " " << xs << " " << ys << " " << zs << " " << rs << std::endl;
     } 
 }
 
