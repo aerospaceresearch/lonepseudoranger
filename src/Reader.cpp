@@ -21,38 +21,45 @@
 #include "Combinations.h"
 #include "GaussianMatrix.h"
 #include "Apollonius.h"
+#include "Stats.h"
 
 std::vector< int > cluster( PositionsList, std::vector< std::vector< int > >, int );
 /**  
  * processing of all collected signals
  */
-void processSignalData()
+void processSignalData( std::string statInput = "", std::string statOutput = "", std::string directory = "" )
 {
-    std::cout << "********* PROCESSING SIGNALS *****************************" << std::endl;
-    std::string lResultFileName( "resultFile" );
-    std::fstream lResultFile;
-    lResultFile.open( lResultFileName, std::ios::in );
-    if( !lResultFile.is_open() )
-    	std::cout << "ERROR: problem with file containing results" << std::endl;
+    bool generateStats = false;
+    if( statInput != std::string("") && statOutput != std::string("") )
+    {
+        generateStats = true;
+        std::cout << "generateStats = true" << std::endl;
+    }
 
+    std::cout << "********* PROCESSING SIGNALS *****************************" << std::endl;
     std::cout << "mSignals.size() = " << mSignals.size() << std::endl;
 
     Combinations aCombinations;
 
+    Stats stats;
+    double statsNbContacts = 0;
+
     std::vector< Signal >::iterator iter;
     for( iter = mSignals.begin(); iter != mSignals.end(); ++iter )
     {
+        ++statsNbContacts;
         int satId = (*iter).getSatId();
         long double timestamp = (*iter).getTimestamp();
 
         std::cout << "For satellite " << satId << " and sending time " << timestamp << " there are " << (*iter).getSize() << " GS" << std::endl;
-        if( (*iter).getSize() >= 4 ) 
-//        if( (*iter).getSize() >= 4 && timestamp<1000 ) //>=884 && timestamp<885 ) 
+        if( (*iter).getSize() >= 4 && (*iter).getSize()<64 ) 
+    //    if( (*iter).getSize() >= 4 && timestamp<1000 && (*iter).getSize()<64 ) //>=884 && timestamp<885 ) 
         //if( (*iter).getSize() >= 4 && timestamp<1313 && timestamp>1312 ) 
 //        if( (*iter).getSize() >= 4 && timestamp>3220 && timestamp<3221 ) // 22 - b16
-    //    if( (*iter).getSize() >= 4 && timestamp>2264 && timestamp<2265 ) // 23 - b9 
+//        if( (*iter).getSize() >= 4 && timestamp>8604 && timestamp<8605 )  
         {
             auto time1 = std::chrono::high_resolution_clock::now();
+            (*iter).printSignal();
             std::cout << std::endl << "***********************************************************************************" << std::endl;
             if( (*iter).getSize() < 4)
                 std::cout << "not taken sat" << (*iter).getSatId() << " with " << (*iter).getSize() << " gs" << std::endl;
@@ -64,88 +71,123 @@ void processSignalData()
             int N = mStations.size();
            // xyzr.addPositions( solveApol( satId, timestamp, mStations ) );
 
-            if( N>6 )
+            SignalStats signalStats( satId, timestamp, N );
+            if( N>5 )
+           // if( N>3 )
             {
                 if( N<20 )
                     std::cout << N << " " << (*iter).getTimestamp() << std::endl;
                 int k = N-2;
-                if( N<6 )
-                    k=4;
+                //if( N<6 )
+                if( k<5 )
+                    k=5;
                 std::cout << "N=" << N << ", k=" << k << std::endl;
 //                std::cout << "For satellite " << satId << ", "<< N << " ground stations and time of sending signal " << timestamp << " I want to set of satellites of size: ";
 //                std::cin >> k;
 
-                stationsComb = aCombinations.getStationsCombinations( N, k );
-                std::vector< std::vector< int > >::iterator iterSt;
-                int pos = 0;
-                for( iterSt = stationsComb.begin(); iterSt != stationsComb.end(); ++iterSt )
-                {
-                    Stations aStations;
-                    for( int i=0; i<k; ++i )
-                    {
-                        aStations.addStation( mStations.getStation( (*iterSt).at(i) ) );
-//                        std::cout << (*iterSt).at(i) << " ";
-                    }
-            //        std::cout << std::endl;
-                    xyzr.addPositions( solveApol( satId, timestamp, aStations, pos, false ) ); // pos - combination id
-                    ++pos;
-                }
-                std::vector< int > selectedCombinations = cluster( xyzr, stationsComb, N );
-                std::sort( selectedCombinations.begin(), selectedCombinations.end() );  
 
-                std::vector< int > selectedGS;
-                std::vector< int >::iterator itInt;
-                Stations selectedStations;
+                // clustering:
+                if( N>5 )
+                {
+                    signalStats.setK( k );
+                    stationsComb = aCombinations.getStationsCombinations( N, k );
+                    std::vector< std::vector< int > >::iterator iterSt;
+                    int pos = 0;
+                    for( iterSt = stationsComb.begin(); iterSt != stationsComb.end(); ++iterSt )
+                    {
+                        Stations aStations;
+                        for( int i=0; i<k; ++i )
+                        {
+                            aStations.addStation( mStations.getStation( (*iterSt).at(i) ) );
+//                            std::cout << (*iterSt).at(i) << " ";
+                        }
+                //        std::cout << std::endl;
+                        xyzr.addPositions( solveApol( satId, timestamp, aStations, pos, false ) ); // pos - combination id
+                        ++pos;
+                    }
+                    // temporary: 
+                  /*  auto stationsComb2 = stationsComb;
+                    stationsComb.clear();
+                    std::vector< std::vector< int > >::iterator iterCombinations;
+                    for( iterCombinations = stationsComb2.begin(); iterCombinations != stationsComb2.end(); ++iterCombinations )
+                    {
+                        stationsComb.push_back( *iterCombinations );
+                        stationsComb.push_back( *iterCombinations );
+                    }
+                    */
+                    std::cout << "stationsComb.size() = " << stationsComb.size() << std::endl;
+                    std::vector< int > selectedCombinations = cluster( xyzr, stationsComb, N );
+                    std::sort( selectedCombinations.begin(), selectedCombinations.end() );  
+
+                    std::vector< int > selectedGS;
+                    std::vector< int >::iterator itInt;
+                    Stations selectedStations;
 
                 
-//                std::cout << "Taken combinations: ";
-                // selectedCombinations - combinations selected by clustering
-                for( itInt = selectedCombinations.begin(); itInt != selectedCombinations.end(); ++itInt )
-                {
-                    // *itInt - number of combination which should be taken
-                    // from stationsComb
-                    std::vector< std::vector< int > >::iterator combIter;
-                    //std::cout << std::endl << "combination " << *itInt << ": " ;
-                    for( int counter = 0; counter < stationsComb.at(*itInt).size(); ++counter )
+//                    std::cout << "Taken combinations: ";
+                    // selectedCombinations - combinations selected by clustering
+                    for( itInt = selectedCombinations.begin(); itInt != selectedCombinations.end(); ++itInt )
                     {
-                        selectedGS.push_back( stationsComb.at(*itInt).at(counter) );
-                      //  std::cout << stationsComb.at(*itInt).at(counter) << " ";
+                        // *itInt - number of combination which should be taken
+                        // from stationsComb
+                        std::vector< std::vector< int > >::iterator combIter;
+                        //std::cout << std::endl << "combination " << *itInt << ": " ;
+                        for( int counter = 0; counter < stationsComb.at(*itInt).size(); ++counter )
+                        {
+                            selectedGS.push_back( stationsComb.at(*itInt).at(counter) );
+                          //  std::cout << stationsComb.at(*itInt).at(counter) << " ";
+                        }
                     }
-                }
-                std::vector< int >::iterator intIt2;
-                std::sort( selectedGS.begin(), selectedGS.end() );
-                intIt2 = std::unique(selectedGS.begin(), selectedGS.end());
-                selectedGS.resize(std::distance( selectedGS.begin(), intIt2 ) );
+                    std::vector< int >::iterator intIt2;
+                    std::sort( selectedGS.begin(), selectedGS.end() );
+                    intIt2 = std::unique(selectedGS.begin(), selectedGS.end());
+                    selectedGS.resize(std::distance( selectedGS.begin(), intIt2 ) );
 
-                if( selectedGS.size() < N )
-                {
-                    std::cout << "************!!!!!!!!!!!!!!! NOT ALL OF STATIONS TAKEN!!!! "<< satId << ", time: " << timestamp << std::endl;
-                }
-                std::cout << std::endl << "Selected stations: " << selectedGS.size() << "/" << N << " (" << timestamp << ")" << std::endl;
-                for( intIt2 = selectedGS.begin(); intIt2 != selectedGS.end(); ++intIt2 )
-                {
-//                    std::cout << (*intIt2) << " " ;
-                    selectedStations.addStation( mStations.getStation( *intIt2 ) );
-                }
-                std::cout << std::endl;
+                    if( selectedGS.size() < N )
+                    {
+                        std::cout << "************!!!!!!!!!!!!!!! NOT ALL OF STATIONS TAKEN!!!! "<< satId << ", time: " << timestamp << std::endl;
+                    }
+                    std::cout << std::endl << "Selected stations: " << selectedGS.size() << "/" << N << " (" << timestamp << ")" << std::endl;
+                    for( intIt2 = selectedGS.begin(); intIt2 != selectedGS.end(); ++intIt2 )
+                    {
+    //                    std::cout << (*intIt2) << " " ;
+                        selectedStations.addStation( mStations.getStation( *intIt2 ) );
+                    }
+                    std::cout << std::endl;
 
-                std::cout << "Result after clustering: ";
-                solveApol( satId, timestamp, selectedStations );
-                selectedStations.printDelayStats( satId, timestamp );
+                    std::cout << "Result after clustering: ";
+                    //std::cout << "stats clustered: " << std::endl;
+                    signalStats.setClusteredPositions( solveApol( satId, timestamp, selectedStations ) );
+//                    if( generateStats )
+ //                   {
+                        std::vector< double > delaysAfter = selectedStations.printDelayStats( satId, timestamp );
+                        signalStats.setMinDelayAfter( delaysAfter.at(0) );
+                        signalStats.setMaxDelayAfter( delaysAfter.at(1) );
+                        signalStats.setMeanDelayAfter( delaysAfter.at(2) );
+                        signalStats.setNbGSafter( selectedGS.size() );
+                        std::cout << "Reader: mNbGSafter: " << selectedGS.size() << std::endl;
+//                    }
+                } // if( N>4 )
 
                 auto time2 = std::chrono::high_resolution_clock::now();
                 std::cout << "Time of processing signal with timestamp " << (*iter).getTimestamp() << ": " << std::chrono::duration_cast< std::chrono::milliseconds >( time2-time1 ).count() << " milliseconds. N=" << N << std::endl;
             
                 std::cout << "Result without clustering: ";
-                solveApol( satId, timestamp, mStations );
+               // std::cout << "stats calculated: " << std::endl;
+                signalStats.setCalculatedPositions( solveApol( satId, timestamp, mStations ) );
+                if( generateStats )
+               {
+                    std::vector< double > delaysBefore = mStations.printDelayStats( satId, timestamp );
+                    signalStats.setMinDelayBefore( delaysBefore.at(0) );
+                    signalStats.setMaxDelayBefore( delaysBefore.at(1) );
+                    signalStats.setMeanDelayBefore( delaysBefore.at(2) );
+                    signalStats.setNbGSbefore( mStations.size() );
+                    std::cout << "Reader: mNbGSbefore = " << mStations.size() << std::endl;
+                    std::cout << "generate stats = true" << std::endl;
+                    stats.push_back( signalStats );
+                }
     //        }
            
-           /* 
-            xyzr.printPositions();
-            for( int i=0; i<xyzr.size(); ++i )
-            {
-                lResultFile << timestamp << " " << xyzr.getX( i ) << " " << xyzr.getY( i ) << " " << xyzr.getZ( i ) << "\n";
-            }*/
         }
         else
         {
@@ -153,8 +195,14 @@ void processSignalData()
             // TODO: trilateration for 3 gs
         }
     }
-    lResultFile.close();
 }
+    if( generateStats )
+    {   
+        stats.setNbContacts( statsNbContacts );
+        stats.readBeaconFile( statInput );
+        stats.calculateStats();
+        stats.printStats( statOutput, directory );
+    }
 }
 /*
 void stats( std::vector< std::tuple< int, double, double > > delays, std::vector< int > satellites )
@@ -202,13 +250,15 @@ void Reader::loadGSData( const char* lFileName )
     	std::cout << "ERROR: problem with file" << std::endl;
 
     double ax, ay, az, delay;
-    double at0, adt;
+    double at0, at1, adt;
     int satId = 0; 
     std::string op1;
 //    std::vector< std::tuple< int, double, double > > delays;
     std::vector< int > satellites;
-    while( lFile >> ax >> ay >> az >> adt >> at0 >> satId >> delay ) // >> at0 >> satId >> op1  )
+    while( lFile >> ax >> ay >> az >> at1 >> at0 >> satId >> delay ) // >> at0 >> satId >> op1  )
+    //while( lFile >> ax >> ay >> az >> at0 >> at1 >> satId >> delay ) // >> at0 >> satId >> op1  )
     {
+        adt = at1-at0;
 
         std::vector< std::vector< double > >::iterator itDelay = delays.begin();
         while( itDelay != delays.end() && (satId!=(*itDelay).at(0) || at0!=(*itDelay).at(1)) )
@@ -315,7 +365,7 @@ void Reader::loadFromDirectory( char* lDirName )
             }
             else
             {
-      //          std::cout << "File " << file << " does not have proper format! " << std::endl;
+                std::cout << "File " << file << " does not have proper format! " << std::endl;
             }
 
         }

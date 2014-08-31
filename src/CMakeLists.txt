@@ -15,7 +15,8 @@ set(LIBS ${LIBS} ${MARBLE_LIBRARIES} ${QT_LIBRARIES} /usr/local/lib/)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR})
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR})
 
-add_executable(lonepseudoranger Cluster.cpp Combinations.cpp GaussianMatrix.cpp Reader.cpp
+add_executable(lonepseudoranger Cluster.cpp Combinations.cpp GaussianMatrix.cpp
+    Reader.cpp Stats.cpp
     main.cpp )
 #target_link_libraries(${TARGET} ${LIBS})
 #target_link_libraries(${TARGET} marblewidget)

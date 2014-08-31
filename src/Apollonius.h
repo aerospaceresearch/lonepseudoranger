@@ -23,8 +23,8 @@ std::vector< Signal > mSignals;
  */
 PositionsList solveApol( int aSatId, long double aTimestamp, Stations aStations, int combId=0, bool print=true, std::vector< int > combSt = { 0 } ) 
 {
+    print = true;
 //    if( aStations.size() > 20 )
-        debug = true;
  /*   std::cout << std::endl << "Solving Apollonius problem for positions: " << std::endl;
     for( int i=0; i < aStations.size(); ++i )
     {
@@ -147,6 +147,7 @@ PositionsList solveApol( int aSatId, long double aTimestamp, Stations aStations,
     } 
 }
 
+//    std::cout << "stats: " << calculatedPositions.size() << std::endl;
     return calculatedPositions;
 }
 

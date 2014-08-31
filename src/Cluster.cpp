@@ -103,6 +103,7 @@ std::vector< int > cluster( PositionsList aList, std::vector< std::vector< int >
     int usedGsCounter = 0;
 
     bool debug = false;
+//    debug = true;
  //   debug = true;
     std::vector< int > ret;
     const int N = aList.size();
@@ -169,15 +170,16 @@ std::vector< int > cluster( PositionsList aList, std::vector< std::vector< int >
 
     std::cout << "CREATING CLUSTERS!" << std::endl;
     double acceptance;
-    if( N<10 )
+    //if( N<10 )
         acceptance = 1;
-    else if( N<20 )
+   /* else if( N<20 )
         acceptance = 0.8;
     else 
-        acceptance = 0.7;
+        acceptance = 0.7;*/
     //while( readyPoints < acceptance*N && mEdges.back().mDistance<1000 )
     while( usedGsCounter < nbGS-1 )
     {
+        debug = true;
         ++counter;
         if( debug )
         {
@@ -208,14 +210,18 @@ std::vector< int > cluster( PositionsList aList, std::vector< std::vector< int >
             clusterId.at( secondPoint ) = nbClusters;
             readyPoints += 2;
             std::vector< int >::iterator itComb;
+            std::cout << " Problem before for? " << std::endl;
+            std::cout << "firstPoint=" << firstPoint << ", aCombinations.size()=" << aCombinations.size() << std::endl;
             for( itComb = (aCombinations.at(firstPoint)).begin(); itComb != (aCombinations.at(firstPoint)).end(); ++itComb )
             {
+                std::cout << "size of usedGs: " << usedGs.size() << ", (*itComb) = " << *itComb << std::endl;
                 if( !usedGs.at(*itComb) )
                 {
                     usedGs.at(*itComb) = true;
                     ++usedGsCounter;
                 }
             }
+            std::cout << " Problem after for " << std::endl;
             for( itComb = (aCombinations.at(secondPoint)).begin(); itComb != (aCombinations.at(secondPoint)).end(); ++itComb )
             {
                 if( !usedGs.at(*itComb) )
@@ -224,6 +230,7 @@ std::vector< int > cluster( PositionsList aList, std::vector< std::vector< int >
                     ++usedGsCounter;
                 }
             }
+            std::cout << " Problem after fors " << std::endl;
         }
         else if( clusterId.at( firstPoint ) == 0 || clusterId.at( secondPoint ) == 0 )
         {
@@ -237,10 +244,14 @@ std::vector< int > cluster( PositionsList aList, std::vector< std::vector< int >
             {
                 std::cout << "--> adding point " << addingPoint << " to cluster " << currentCluster << std::endl;
             }
+            std::cout << "test1" << std::endl;
             mClusters.at( currentCluster-1 ).addPoint( addingPoint );
+            std::cout << "test2" << std::endl;
             clusterId.at( addingPoint ) = currentCluster;
+            std::cout << "test3" << std::endl;
             ++readyPoints;
             std::vector< int >::iterator itComb;
+            std::cout << "Problem before for?" << std::endl;
             for( itComb = (aCombinations.at(addingPoint)).begin(); itComb != (aCombinations.at(addingPoint)).end(); ++itComb )
             {
                 if( !usedGs.at(*itComb) )
@@ -249,6 +260,7 @@ std::vector< int > cluster( PositionsList aList, std::vector< std::vector< int >
                     ++usedGsCounter;
                 }
             }
+            std::cout << "Problem after for" << std::endl;
         }
         else
         { 
@@ -284,6 +296,7 @@ std::vector< int > cluster( PositionsList aList, std::vector< std::vector< int >
                 print = false;
             }
         }
+        std::cout << " in the middle of the loop " << std::endl;
         if( print )
         {
 //            printClusters( mClusters );
@@ -293,6 +306,7 @@ std::vector< int > cluster( PositionsList aList, std::vector< std::vector< int >
         {
             std::cout << std::endl;
         }
+        std::cout << " end of loop " << std::endl;
     }
     std::cout << "The shortest distance: " << shortDistance << ", the longest: " << longDistance; 
     std::cout << ", first unused: " << mEdges.back().mDistance << ". Used: " << counter << "/" << nbEdges;

@@ -202,9 +202,12 @@ class Stations
 	    std::cout << std::endl;
     }
 
-    void printDelayStats( int aSatId, double aTimestamp )
+    std::vector< double > printDelayStats( int aSatId, double aTimestamp )
     {
-        double minDelay = 100, maxDelay = 0, sumDelay = 0;
+        std::vector< double > delays;
+        minDelay = 100;
+        maxDelay = 0;
+        double sumDelay = 0;
         std::vector< Station >::iterator itDelays;
         for( itDelays = mStations.begin(); itDelays != mStations.end(); ++itDelays )
         {
@@ -215,8 +218,12 @@ class Stations
             if( current < minDelay )
                 minDelay = current;
         }
-        std::cout << "Delays after clustering: " << aSatId << " " << aTimestamp << " " << sumDelay/mStations.size() << " " << minDelay << " " << maxDelay << std::endl;
- 
+        meanDelay = sumDelay/mStations.size();
+        std::cout << "Delays after clustering: " << aSatId << " " << aTimestamp << " " << meanDelay << " " << minDelay << " " << maxDelay << std::endl;
+        delays.push_back( minDelay );
+        delays.push_back( maxDelay );
+        delays.push_back( meanDelay );
+        return delays;
     }
 
     void clear()
@@ -227,6 +234,9 @@ class Stations
 //  private:
     std::vector< Station > mStations;  
     long double mT;
+    double minDelay;
+    double maxDelay;
+    double meanDelay;
 };
 
 typedef std::array< long double, 5 > Position; // xs,ys,zs,rs from Apollonius, combination id 
@@ -466,7 +476,7 @@ public:
             if( current < minDelay )
                 minDelay = current;
         }
-        std::cout << "delafte " << mSatId << " " << mTimestamp << " " << sumDelay/mGroundStations.size() << " " << minDelay << " " << maxDelay << std::endl;
+        std::cout << "delay " << mSatId << " " << mTimestamp << " " << sumDelay/mGroundStations.size() << " " << minDelay << " " << maxDelay << std::endl;
     }
 
 private: 
