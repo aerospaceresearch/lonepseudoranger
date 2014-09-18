@@ -103,8 +103,7 @@ std::vector< int > cluster( PositionsList aList, std::vector< std::vector< int >
     int usedGsCounter = 0;
 
     bool debug = false;
-//    debug = true;
- //   debug = true;
+    //debug = true;
     std::vector< int > ret;
     const int N = aList.size();
     //const int N = std::min(aList.size(), 1000 );
@@ -147,11 +146,13 @@ std::vector< int > cluster( PositionsList aList, std::vector< std::vector< int >
     double longDistance = mEdges.front().mDistance; 
     //debug = true;
     counter = 0;
+    int limit_printed_dist = 20;
     if( debug )
     {
         std::cout << "List of distances: " << std::endl;
-        for( it=mEdges.end()-1; it >= mEdges.begin(); --it )
+        for( it=mEdges.end()-1; it >= mEdges.begin() && limit_printed_dist>0 ; --it )
         {
+            --limit_printed_dist;
             std::cout << ++counter << " ";
             (*it).printEdge();
             std::cout << "          ";
@@ -169,6 +170,9 @@ std::vector< int > cluster( PositionsList aList, std::vector< std::vector< int >
     std::cout << std::endl;
 
     std::cout << "CREATING CLUSTERS!" << std::endl;
+    std::vector< Cluster >::iterator itClust;
+    int maxSizeClu;
+    int maxSizeCluIndex;
     double acceptance;
     //if( N<10 )
         acceptance = 1;
@@ -176,7 +180,10 @@ std::vector< int > cluster( PositionsList aList, std::vector< std::vector< int >
         acceptance = 0.8;
     else 
         acceptance = 0.7;*/
-    //while( readyPoints < acceptance*N && mEdges.back().mDistance<1000 )
+//    while( readyPoints < acceptance*N && mEdges.back().mDistance<10000 )
+//    while( usedGsCounter < nbGS-1 )
+    std::vector< std::vector< bool > > mGSinClusters;
+//    while( maxSizeClu < nbGS-2 )
     while( usedGsCounter < nbGS-1 )
     {
         debug = true;
@@ -197,6 +204,8 @@ std::vector< int > cluster( PositionsList aList, std::vector< std::vector< int >
         // both points are not clustered
         if( clusterId.at( firstPoint ) == 0 && clusterId.at( secondPoint ) == 0 ) 
         {
+            std::vector< bool > vectFalse( nbGS, false );
+            mGSinClusters.push_back( vectFalse );
             if( debug )
             {
                 mEdges.back().printEdge();
@@ -210,27 +219,33 @@ std::vector< int > cluster( PositionsList aList, std::vector< std::vector< int >
             clusterId.at( secondPoint ) = nbClusters;
             readyPoints += 2;
             std::vector< int >::iterator itComb;
-            std::cout << " Problem before for? " << std::endl;
             std::cout << "firstPoint=" << firstPoint << ", aCombinations.size()=" << aCombinations.size() << std::endl;
+            std::cout << "secondPoint=" << secondPoint << ", aCombinations.size()=" << aCombinations.size() << std::endl;
+            std::cout << "Adding: ";
             for( itComb = (aCombinations.at(firstPoint)).begin(); itComb != (aCombinations.at(firstPoint)).end(); ++itComb )
             {
-                std::cout << "size of usedGs: " << usedGs.size() << ", (*itComb) = " << *itComb << std::endl;
+                (mGSinClusters.at( nbClusters-1 )).at( *itComb ) = true;
+                std::cout << *itComb << " ";
                 if( !usedGs.at(*itComb) )
                 {
+                    std::cout << "(first time used) ";
                     usedGs.at(*itComb) = true;
                     ++usedGsCounter;
                 }
             }
-            std::cout << " Problem after for " << std::endl;
+            std::cout << std::endl << "Adding: ";
             for( itComb = (aCombinations.at(secondPoint)).begin(); itComb != (aCombinations.at(secondPoint)).end(); ++itComb )
             {
+                (mGSinClusters.at( nbClusters-1 )).at( *itComb ) = true;
+                std::cout << *itComb << " ";
                 if( !usedGs.at(*itComb) )
                 {
+                    std::cout << "(first time used) ";
                     usedGs.at(*itComb) = true;
                     ++usedGsCounter;
                 }
             }
-            std::cout << " Problem after fors " << std::endl;
+            std::cout << std::endl;
         }
         else if( clusterId.at( firstPoint ) == 0 || clusterId.at( secondPoint ) == 0 )
         {
@@ -244,23 +259,23 @@ std::vector< int > cluster( PositionsList aList, std::vector< std::vector< int >
             {
                 std::cout << "--> adding point " << addingPoint << " to cluster " << currentCluster << std::endl;
             }
-            std::cout << "test1" << std::endl;
             mClusters.at( currentCluster-1 ).addPoint( addingPoint );
-            std::cout << "test2" << std::endl;
             clusterId.at( addingPoint ) = currentCluster;
-            std::cout << "test3" << std::endl;
             ++readyPoints;
             std::vector< int >::iterator itComb;
-            std::cout << "Problem before for?" << std::endl;
+            std::cout << "Adding: ";
             for( itComb = (aCombinations.at(addingPoint)).begin(); itComb != (aCombinations.at(addingPoint)).end(); ++itComb )
             {
+                std::cout << *itComb << " ";
+                (mGSinClusters.at( currentCluster-1 )).at( *itComb ) = true;
                 if( !usedGs.at(*itComb) )
                 {
+                    std::cout << "(first time used) ";
                     usedGs.at(*itComb) = true;
                     ++usedGsCounter;
                 }
             }
-            std::cout << "Problem after for" << std::endl;
+            std::cout << std::endl;
         }
         else
         { 
@@ -296,23 +311,53 @@ std::vector< int > cluster( PositionsList aList, std::vector< std::vector< int >
                 print = false;
             }
         }
-        std::cout << " in the middle of the loop " << std::endl;
         if( print )
         {
-//            printClusters( mClusters );
+            std::cout << "usedGsCounter = " << usedGsCounter << std::endl;
+            printClusters( mClusters );
         }
-        mEdges.pop_back();
+        
+        maxSizeClu = 0;
+        int ind = 0;
+        std::vector< std::vector< bool > >::iterator itBool1; 
+        std::cout << "nb of clusters: " << mGSinClusters.size() << std::endl;
+        for( itBool1 = mGSinClusters.begin(); itBool1 != mGSinClusters.end(); ++itBool1 )
+        {
+            ++ind;
+            std::cout << "Cluster " << ind << ": ";
+            int nsize = 0;
+            std::vector< bool >::iterator itBool2;
+            int ind2 = 0;
+            for( itBool2 = (*itBool1).begin(); itBool2 != (*itBool1).end(); ++itBool2 )
+            {
+                if( *itBool2 )
+                {
+                    std::cout << ind2 << " ";
+                    ++nsize;
+                }
+                ++ind2;
+            }
+            if( nsize>maxSizeClu )
+            {
+                maxSizeClu = nsize;
+                maxSizeCluIndex = ind;
+            }
+            std::cout << std::endl;
+        }
+        if( debug )
+        {
+            std::cout << "max size of cluster = " << maxSizeClu << " (cluster " << maxSizeCluIndex << ")" << std::endl;
+        }
+       mEdges.pop_back();
         if( debug )
         {
             std::cout << std::endl;
         }
-        std::cout << " end of loop " << std::endl;
     }
     std::cout << "The shortest distance: " << shortDistance << ", the longest: " << longDistance; 
     std::cout << ", first unused: " << mEdges.back().mDistance << ". Used: " << counter << "/" << nbEdges;
     std::cout << ", " << readyPoints << "/" << N << std::endl;
 
-    std::vector< Cluster >::iterator itClust;
     int maxSize = 0; 
     int maxSizeIndex;
     int emptyClusters = 0;
@@ -353,6 +398,8 @@ std::vector< int > cluster( PositionsList aList, std::vector< std::vector< int >
         }
     }
 
+    maxSize = maxSizeClu;
+    maxSizeIndex = maxSizeCluIndex;
     std::cout << "N=" << N << ". The best cluster: " << maxSizeIndex << " of size " << maxSize << std::endl;
     std::cout << "All clusters: " << mClusters.size() << ", empty clusters: " << emptyClusters << std::endl;
 

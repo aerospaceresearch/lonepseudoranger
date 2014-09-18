@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include <fstream>
 #include <cmath>
@@ -6,6 +7,11 @@
 #include "Stats.h"
 
 void SignalStats::addPresice( std::string aStatInput )
+{
+
+}
+
+void SignalStats::copyFromCalculated()
 {
 
 }
@@ -25,10 +31,12 @@ void SignalStats::calculateStats()
         diffCalculated.push_back( diff );
         mRMSbefore += pow( diff, 2 );
         mAverBefore += diff;
+        std::cout << "Difference: before+= " << diff << std::endl;
         std::cout << "stats_diff: mCalculated(" << i << ") = " << diff << std::endl;
     }
-    mRMSbefore = sqrt( mRMSbefore/mNbGSbefore );
-    mAverBefore = mAverBefore/mNbGSbefore;
+    std::cout << "mCalculatedPositions.size() = " << mCalculatedPositions.size() << ", mNbGSbefore = " << mNbGSbefore << std::endl;
+//    mRMSbefore = sqrt( mRMSbefore/mNbGSbefore ); // TODO workaround 
+ //   mAverBefore = mAverBefore/mNbGSbefore;
     
     //mNbGSafter = mClusteredPositions.size();
     for( int i=0; i<mClusteredPositions.size(); ++i )
@@ -37,10 +45,14 @@ void SignalStats::calculateStats()
         diffClustered.push_back( diff );
         mRMSafter += pow( diff, 2 );
         mAverAfter += diff;
+        std::cout << "Difference: after+= " << diff << std::endl;
         std::cout << "stats_diff: mClustered(" << i << ") = " << diff << std::endl;
     }
-    mRMSafter = sqrt( mRMSafter/mNbGSafter );
-    mAverAfter = mAverAfter/mNbGSafter;
+    std::cout << "mClusteredPositions.size() = " << mClusteredPositions.size() << ", mNbGSafter = " << mNbGSafter << std::endl;
+//    mRMSafter = sqrt( mRMSafter/mNbGSafter );
+//    mAverAfter = mAverAfter/mNbGSafter;
+
+    std::cout << "Difference2: time=" << mTimestamp << ". mAverBefore = " << mAverBefore << ", mAverAfter = " << mAverAfter << std::endl;
 }
     
 double SignalStats::difference( PrecPosition aPrec, Position aCalc )
@@ -59,6 +71,8 @@ double SignalStats::difference( PrecPosition aPrec, Position aCalc )
 
    double r2 = dx*dx + dy*dy + dz*dz;
    double r = sqrt( r2 );
+
+//   std::cout << mTimestamp << " Difference between: " << x1 << ", " << y1 << ", " << z1 << " and " << x2 << ", " << y2 << ", " << z2 << " = " << r << std::endl;
    return r;
 }
 
@@ -96,17 +110,33 @@ void SignalStats::printStats( std::string outputStats )
         {
             for( it = diffClustered.begin(); it != diffClustered.end(); ++it )
                 sumClustered += *it;
-            diffAfter = sumClustered/diffClustered.size();
+            if( diffClustered.size() < 1 )
+            {
+                diffAfter = diffBefore;
+                mMinDelayAfter = mMinDelayBefore;
+                mMeanDelayAfter = mMeanDelayBefore;
+                mMaxDelayAfter = mMaxDelayBefore;
+                mNbGSafter = mNbGSbefore;
+            }
+            else
+            {
+                diffAfter = sumClustered/diffClustered.size();
+            }
         }
         else
         {
-            diffAfter = -1;
-//            diffAfter = diffBefore;
+    //        diffAfter = -1;
+            diffAfter = diffBefore;
+            mMinDelayAfter = mMinDelayBefore;
+            mMeanDelayAfter = mMeanDelayBefore;
+            mMaxDelayAfter = mMaxDelayBefore;
         }
+        mAverAfter = diffAfter;
 
-        fileStats << mSatId << "; " << mTimestamp << "; " << mN << "; " << mK << "; " << (int)mClustered << "; ";
-        fileStats << mRMSbefore << "; " << mRMSafter << "; " << diffBefore << "; " << diffAfter << "; " << mNbGSbefore << "; " << mNbGSafter << "; " ;
-        fileStats << mMinDelayBefore << "; " << mMinDelayAfter << "; " << mMaxDelayBefore << "; " << mMaxDelayAfter << "; " << mMeanDelayBefore << "; " << mMeanDelayAfter << ";\n";
+        // printing stats for one signal:
+        fileStats << mSatId << ";" << mTimestamp << ";" << mN << ";" << mK << ";" << (int)mClustered << ";";
+        fileStats << std::setprecision(15) << diffBefore << ";" << diffAfter << ";" << mNbGSbefore << ";" << mNbGSafter << ";" ;
+        fileStats << mMinDelayBefore << ";" << mMeanDelayBefore << ";" << mMaxDelayBefore << ";" << mMinDelayAfter << ";" << mMeanDelayAfter << ";" << mMaxDelayAfter << ";\n";
         fileStats.close();
     }
 }

@@ -43,6 +43,7 @@ void processSignalData( std::string statInput = "", std::string statOutput = "",
 
     Stats stats;
     double statsNbContacts = 0;
+    double statsNbTracked = 0;
 
     std::vector< Signal >::iterator iter;
     for( iter = mSignals.begin(); iter != mSignals.end(); ++iter )
@@ -52,12 +53,9 @@ void processSignalData( std::string statInput = "", std::string statOutput = "",
         long double timestamp = (*iter).getTimestamp();
 
         std::cout << "For satellite " << satId << " and sending time " << timestamp << " there are " << (*iter).getSize() << " GS" << std::endl;
-        if( (*iter).getSize() >= 4 && (*iter).getSize()<64 ) 
-    //    if( (*iter).getSize() >= 4 && timestamp<1000 && (*iter).getSize()<64 ) //>=884 && timestamp<885 ) 
-        //if( (*iter).getSize() >= 4 && timestamp<1313 && timestamp>1312 ) 
-//        if( (*iter).getSize() >= 4 && timestamp>3220 && timestamp<3221 ) // 22 - b16
-//        if( (*iter).getSize() >= 4 && timestamp>8604 && timestamp<8605 )  
+        if( (*iter).getSize() > 6 && (*iter).getSize()<64 ) //&& timestamp==0 && satId==0 ) // temporary
         {
+            ++statsNbTracked;
             auto time1 = std::chrono::high_resolution_clock::now();
             (*iter).printSignal();
             std::cout << std::endl << "***********************************************************************************" << std::endl;
@@ -72,23 +70,23 @@ void processSignalData( std::string statInput = "", std::string statOutput = "",
            // xyzr.addPositions( solveApol( satId, timestamp, mStations ) );
 
             SignalStats signalStats( satId, timestamp, N );
-            if( N>5 )
+            if( N>=4 )
            // if( N>3 )
             {
-                if( N<20 )
-                    std::cout << N << " " << (*iter).getTimestamp() << std::endl;
-                int k = N-2;
-                //if( N<6 )
+                int k = 5;
+                k = N-2;
                 if( k<5 )
                     k=5;
                 std::cout << "N=" << N << ", k=" << k << std::endl;
-//                std::cout << "For satellite " << satId << ", "<< N << " ground stations and time of sending signal " << timestamp << " I want to set of satellites of size: ";
+
+                std::cout << "For satellite " << satId << ", "<< N << " ground stations and time of sending signal " << timestamp << " I want to set of satellites of size: ";
 //                std::cin >> k;
 
 
                 // clustering:
-                if( N>5 )
+                if( N>6 )
                 {
+                    signalStats.setClustered( true );
                     signalStats.setK( k );
                     stationsComb = aCombinations.getStationsCombinations( N, k );
                     std::vector< std::vector< int > >::iterator iterSt;
@@ -105,16 +103,6 @@ void processSignalData( std::string statInput = "", std::string statOutput = "",
                         xyzr.addPositions( solveApol( satId, timestamp, aStations, pos, false ) ); // pos - combination id
                         ++pos;
                     }
-                    // temporary: 
-                  /*  auto stationsComb2 = stationsComb;
-                    stationsComb.clear();
-                    std::vector< std::vector< int > >::iterator iterCombinations;
-                    for( iterCombinations = stationsComb2.begin(); iterCombinations != stationsComb2.end(); ++iterCombinations )
-                    {
-                        stationsComb.push_back( *iterCombinations );
-                        stationsComb.push_back( *iterCombinations );
-                    }
-                    */
                     std::cout << "stationsComb.size() = " << stationsComb.size() << std::endl;
                     std::vector< int > selectedCombinations = cluster( xyzr, stationsComb, N );
                     std::sort( selectedCombinations.begin(), selectedCombinations.end() );  
@@ -132,8 +120,10 @@ void processSignalData( std::string statInput = "", std::string statOutput = "",
                         // from stationsComb
                         std::vector< std::vector< int > >::iterator combIter;
                         //std::cout << std::endl << "combination " << *itInt << ": " ;
+                        std::cout << "*itInt = " << (*itInt) << std::endl;
                         for( int counter = 0; counter < stationsComb.at(*itInt).size(); ++counter )
                         {
+                            std::cout << "pushing to selectedGS: " << stationsComb.at(*itInt).at(counter) << std::endl;
                             selectedGS.push_back( stationsComb.at(*itInt).at(counter) );
                           //  std::cout << stationsComb.at(*itInt).at(counter) << " ";
                         }
@@ -143,32 +133,38 @@ void processSignalData( std::string statInput = "", std::string statOutput = "",
                     intIt2 = std::unique(selectedGS.begin(), selectedGS.end());
                     selectedGS.resize(std::distance( selectedGS.begin(), intIt2 ) );
 
-                    if( selectedGS.size() < N )
+                    if( selectedGS.size() == N )
+                    {
+                   //     signalStats.setClustered( false );
+                        std::cout << "copy from calculated, time=" << timestamp << std::endl;
+                        signalStats.copyFromCalculated();
+                        signalStats.setClustered( true );
+                    }
+                    else if( selectedGS.size() == N-1 )
                     {
                         std::cout << "************!!!!!!!!!!!!!!! NOT ALL OF STATIONS TAKEN!!!! "<< satId << ", time: " << timestamp << std::endl;
-                    }
-                    std::cout << std::endl << "Selected stations: " << selectedGS.size() << "/" << N << " (" << timestamp << ")" << std::endl;
-                    for( intIt2 = selectedGS.begin(); intIt2 != selectedGS.end(); ++intIt2 )
-                    {
-    //                    std::cout << (*intIt2) << " " ;
-                        selectedStations.addStation( mStations.getStation( *intIt2 ) );
-                    }
-                    std::cout << std::endl;
+                        std::cout << std::endl << "Selected stations: " << selectedGS.size() << "/" << N << " (" << timestamp << ")" << std::endl;
+                        for( intIt2 = selectedGS.begin(); intIt2 != selectedGS.end(); ++intIt2 )
+                        {
+                            std::cout << (*intIt2) << " " ;
+                            selectedStations.addStation( mStations.getStation( *intIt2 ) );
+                        }
+                        std::cout << std::endl;
 
-                    std::cout << "Result after clustering: ";
-                    //std::cout << "stats clustered: " << std::endl;
-                    signalStats.setClusteredPositions( solveApol( satId, timestamp, selectedStations ) );
-//                    if( generateStats )
- //                   {
-                        std::vector< double > delaysAfter = selectedStations.printDelayStats( satId, timestamp );
-                        signalStats.setMinDelayAfter( delaysAfter.at(0) );
-                        signalStats.setMaxDelayAfter( delaysAfter.at(1) );
-                        signalStats.setMeanDelayAfter( delaysAfter.at(2) );
-                        signalStats.setNbGSafter( selectedGS.size() );
-                        std::cout << "Reader: mNbGSafter: " << selectedGS.size() << std::endl;
-//                    }
-                } // if( N>4 )
-
+                        std::cout << "Result after clustering: ";
+                        //std::cout << "stats clustered: " << std::endl;
+                        signalStats.setClusteredPositions( solveApol( satId, timestamp, selectedStations ) );
+//                        if( generateStats )
+ //                       {
+                            std::vector< double > delaysAfter = selectedStations.printDelayStats( satId, timestamp );
+                            signalStats.setMinDelayAfter( delaysAfter.at(0) );
+                            signalStats.setMaxDelayAfter( delaysAfter.at(1) );
+                            signalStats.setMeanDelayAfter( delaysAfter.at(2) );
+                            signalStats.setNbGSafter( selectedGS.size() );
+                            std::cout << "Reader: mNbGSafter: " << selectedGS.size() << std::endl;
+//                        }
+                   // } 
+                }
                 auto time2 = std::chrono::high_resolution_clock::now();
                 std::cout << "Time of processing signal with timestamp " << (*iter).getTimestamp() << ": " << std::chrono::duration_cast< std::chrono::milliseconds >( time2-time1 ).count() << " milliseconds. N=" << N << std::endl;
             
@@ -176,7 +172,7 @@ void processSignalData( std::string statInput = "", std::string statOutput = "",
                // std::cout << "stats calculated: " << std::endl;
                 signalStats.setCalculatedPositions( solveApol( satId, timestamp, mStations ) );
                 if( generateStats )
-               {
+                {
                     std::vector< double > delaysBefore = mStations.printDelayStats( satId, timestamp );
                     signalStats.setMinDelayBefore( delaysBefore.at(0) );
                     signalStats.setMaxDelayBefore( delaysBefore.at(1) );
@@ -186,19 +182,22 @@ void processSignalData( std::string statInput = "", std::string statOutput = "",
                     std::cout << "generate stats = true" << std::endl;
                     stats.push_back( signalStats );
                 }
-    //        }
-           
+           // }
         }
-        else
-        {
-            std::cout << "Not taken sat " << satId << " with " << (*iter).getSize() << " gs." << std::endl;
-            // TODO: trilateration for 3 gs
+    //        } 
+            }
+            else
+            {
+                std::cout << "Not taken sat " << satId << " with " << (*iter).getSize() << " gs." << std::endl;
+                // TODO: trilateration for 3 gs
+            }
         }
     }
-}
+
     if( generateStats )
     {   
         stats.setNbContacts( statsNbContacts );
+        stats.setNbTracked( statsNbTracked );
         stats.readBeaconFile( statInput );
         stats.calculateStats();
         stats.printStats( statOutput, directory );
@@ -255,7 +254,7 @@ void Reader::loadGSData( const char* lFileName )
     std::string op1;
 //    std::vector< std::tuple< int, double, double > > delays;
     std::vector< int > satellites;
-    while( lFile >> ax >> ay >> az >> at1 >> at0 >> satId >> delay ) // >> at0 >> satId >> op1  )
+    while( lFile >> ax >> ay >> az >> at1 >> at0 >> op1 /* satId*/ >> delay ) // >> at0 >> satId >> op1  )
     //while( lFile >> ax >> ay >> az >> at0 >> at1 >> satId >> delay ) // >> at0 >> satId >> op1  )
     {
         adt = at1-at0;
@@ -329,7 +328,7 @@ void stats()
             if( current < min )
                 min = current;
         }
-        std::cout << "delay " << satId << " " << std::setprecision(20) << time << " " << min << " " << sum/((*itDelay).size()-2) << " " << max << std::endl;
+//        std::cout << "delay " << satId << " " << std::setprecision(20) << time << " " << min << " " << sum/((*itDelay).size()-2) << " " << max << std::endl;
     }
 }
 
@@ -360,7 +359,7 @@ void Reader::loadFromDirectory( char* lDirName )
 
             if( file.substr( file.size()-4, 4) == std::string(".gsd") )
             {
-    //            std::cout << "Processing file: " << file << std::endl;
+                std::cout << "Processing file: " << file << std::endl;
                 loadGSData( file.c_str() );          
             }
             else

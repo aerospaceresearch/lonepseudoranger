@@ -30,7 +30,7 @@ int main( int argc, char* argv[] )
             isDirectoryKnown = true;
             reader.loadFromDirectory( optarg );
             dir = std::string( optarg );
-            processSignalData( statInput, statOutput, dir.substr(dir.length()-12, 10 ) );
+            processSignalData( statInput, statOutput, dir ); //.substr(dir.length()-16, 14 ) );
             break;
         default:
 	        std::cout << "Missing path to the directory! Use parameter -d." << std::endl;

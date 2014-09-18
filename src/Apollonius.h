@@ -125,7 +125,9 @@ PositionsList solveApol( int aSatId, long double aTimestamp, Stations aStations,
 
         }
 
-        rs = p1 ;
+       // rs = p1 ;
+        rs = p2 ;
+//        rs = p1>p2 ? p1 : p2;
         xs = M+N*rs;
         ys = P+Q*rs;
         zs = R+S*rs;

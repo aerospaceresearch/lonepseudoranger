@@ -109,11 +109,17 @@ public:
         mNbGSafter = aNbGSafter;
     }
 
-    double difference( PrecPosition aPrec, Position aCalc );
+    void setClustered( bool aClustered )
+    {
+        mClustered = aClustered;
+    }
 
+    double difference( PrecPosition aPrec, Position aCalc );
+    void copyFromCalculated();
     void calculateStats();
     PositionsList getClusteredPositions() { return mClusteredPositions; } 
     PositionsList getCalculatedPositions() { return mCalculatedPositions; } 
+    bool isClustered() { return mClustered; }
 
 private:
     int mSatId;
@@ -158,8 +164,9 @@ class Stats
 
         std::vector< PrecPosition > precPos;
         double x,y,z,t;
+        std::string op1;
         int s;
-        while( precFile >> x >> y >> z >> t >> s)
+        while( precFile >> x >> y >> z >> t >> op1)
         {   
         //        std::cout << x << " " << y << " " << z << " " << t << "\n";
             auto pos = std::make_tuple( x, y, z, t, s );
@@ -199,6 +206,7 @@ class Stats
             std::vector< SignalStats >::iterator it;
             for( it = mSignals.begin(); it != mSignals.end(); ++it )
             {
+                std::cout << "Difference calculating for " << (*it).getTimestamp() << ": " << std::endl;
                 (*it).calculateStats();
             }
         }
@@ -207,6 +215,11 @@ class Stats
     void setNbSignals( int aNbSignals )
     {
         mNbSignals = aNbSignals;
+    }
+
+    void setNbTracked( int aNbTracked )
+    {
+        mNbTracked = aNbTracked;
     }
 
     void setNbContacts( int aNbContacts )
@@ -241,15 +254,20 @@ class Stats
             if( !fileStats.is_open() )
                 std::cout << "STATS FILE CLOSED!" << std::endl;
 
-            fileStats << "Satellite; Timestamp; N; k; Clustered; RMS_before; RMS_after; Diff_before; Diff_after; Nb_GS_before; Nb_GS_after; ";
-            fileStats << "Min_delay_before; Min_delay_after; Max_delay_before; Max_delay_after; Mean_delay_before; Mean_delay_after;\n ";
+            fileStats << "Satellite; Timestamp; N; k; Clustered; Diff_before; Diff_after; Nb_GS_before; Nb_GS_after; ";
+            fileStats << "Min_delay_before; Mean_delay_before; Max_delay_before; Min_delay_after; Mean_delay_after; Max_delay_after;\n";
             fileStats.close();
 
             std::vector< SignalStats >::iterator it;
             for( it = mSignals.begin(); it != mSignals.end(); ++it )
             {
+
+                std::cout << "*********************test copy: "  << mAverDiffBefore << " " <<  mAverDiffAfter << std::endl;
                 std::cout << "stats time: " << (*it).getTimestamp() <<  " " << ((*it).getClusteredPositions()).size() << " " <<  ((*it).getCalculatedPositions()).size() << ", n=" << n << std::endl;
-                (*it).printStats( outputStats );
+         //       if( (*it).isClustered() )
+                {
+                    (*it).printStats( outputStats );
+                }
 
                 std::cout << "mNb = " << (*it).mNbGSbefore << " " << (*it).mNbGSafter << std::endl;
                 mAverRMSbefore += (*it).mRMSbefore;
@@ -259,7 +277,7 @@ class Stats
                 mAverMaxDelayBefore += (*it).mMaxDelayBefore;
                 mAverMeanDelayBefore += (*it).mMeanDelayBefore;
 
-                if( (*it).mClustered )
+//                if( (*it).mClustered )
                 {
                     ++mNbClustered;
                     mAverRMSafter += (*it).mRMSafter;
@@ -272,7 +290,7 @@ class Stats
                     mAverRMSbeforeClOnly += (*it).mRMSbefore;
                     mAverDiffBeforeClOnly += (*it).mAverBefore;
                     mAverNbGSbeforeClOnly += (double)(*it).mNbGSbefore;
-                    mAverMinDelayBeforeClOnly += (*it).mMinDelayBefore;
+                    mAverMinDelayBeforeClOnly += (*it).mMinDelayBefore; 
                     mAverMaxDelayBeforeClOnly += (*it).mMaxDelayBefore;
                     mAverMeanDelayBeforeClOnly += (*it).mMeanDelayBefore;
 
@@ -282,8 +300,12 @@ class Stats
                     mAverMinDelayAfterClOnly += (*it).mMinDelayAfter;
                     mAverMaxDelayAfterClOnly += (*it).mMaxDelayAfter;
                     mAverMeanDelayAfterClOnly += (*it).mMeanDelayAfter;
+
+                    std::cout << "Difference before: for time " << (*it).getTimestamp() << " adding " << (*it).mAverBefore << std::endl;
+                    std::cout << "Difference. current before: " << mAverDiffBeforeClOnly << std::endl;
+//                    std::cout << "Difference after: for time " << (*it).getTimestamp() << " adding " << (*it).mAverAfter << std::endl;
                 }
-                else
+/*                else
                 {
                     mAverRMSafter += (*it).mRMSbefore;
                     mAverDiffAfter += (*it).mAverBefore;
@@ -292,9 +314,9 @@ class Stats
                     mAverMaxDelayAfter += (*it).mMaxDelayBefore;
                     mAverMeanDelayAfter += (*it).mMeanDelayBefore;
 
-                }
+                }*/
             }
-            mAverRMSbefore /= n;
+/*            mAverRMSbefore /= n;
             mAverDiffBefore /= n;
             mAverNbGSbefore /= n;
             mAverMinDelayBefore /= n;
@@ -307,7 +329,9 @@ class Stats
             mAverMinDelayAfter /= n;
             mAverMaxDelayAfter /= n;
             mAverMeanDelayAfter /= n;
-
+*/
+            std::cout << "Difference: mAverDiffBeforeClOnly (sum) = " << mAverDiffBeforeClOnly << std::endl;
+            std::cout << "Difference: mNbClustered = " << mNbClustered << std::endl;
             if( mNbClustered != 0 )
             {
                 mAverRMSbeforeClOnly /= mNbClustered;
@@ -326,19 +350,21 @@ class Stats
             }
         }
 
+        std::cout << "*********************test copy: "  << mAverNbGSbeforeClOnly << " " <<  mAverNbGSafterClOnly << std::endl;
+        
         std::string fileName("stats.csv");
         std::fstream file;
         file.open( fileName.c_str(), std::ios::out | std::ofstream::app );
-        file << directory << "; " << mAverRMSbefore << "; " << mAverRMSafter << "; ";
-        file << mAverRMSbeforeClOnly << "; " << mAverRMSafterClOnly << "; ";
+        file << directory << ";" ; //<< mAverRMSbefore << "; " << mAverRMSafter << "; ";
+        file << mAverRMSbeforeClOnly << ";" << mAverRMSafterClOnly << ";";
 
-        file << mAverDiffBefore << "; " << mAverDiffAfter << "; ";
-        file << mAverDiffBeforeClOnly << "; " << mAverDiffAfterClOnly << "; ";
+//        file << mAverDiffBefore << "; " << mAverDiffAfter << "; ";
+        file << mAverDiffBeforeClOnly << ";" << mAverDiffAfterClOnly << ";";
 
-        file << mNbSignals << "; " << mNbContacts << "; " << mNbClustered << "; ";
-        file << mAverNbGSbefore << "; " <<  mAverNbGSafter << "; ";
-        file <<  mAverMinDelayBefore << "; " << mAverMinDelayAfter << "; ";
-        file << mAverMaxDelayBefore << "; " << mAverMaxDelayAfter << "; " << mAverMeanDelayBefore << "; " << mAverMeanDelayAfter << ";\n";
+        file << mNbSignals << ";" << mNbContacts << ";" << mNbTracked << ";" << mNbClustered << ";";
+        file << mAverNbGSbeforeClOnly << ";" <<  mAverNbGSafterClOnly << ";";
+        file <<  mAverMinDelayBefore << ";" << mAverMeanDelayBefore << ";" << mAverMaxDelayBefore << ";";
+        file <<  mAverMinDelayAfter << ";" << mAverMeanDelayAfter << ";" << mAverMaxDelayAfter << ";\n";
     }
 
   private:
@@ -349,6 +375,7 @@ class Stats
     double mAverDiffAfter = 0;
     int mNbSignals = 0;
     int mNbContacts = 0;
+    int mNbTracked = 0;
     int mNbClustered = 0;
     double mAverNbGSbefore = 0;
     double mAverNbGSafter = 0;
