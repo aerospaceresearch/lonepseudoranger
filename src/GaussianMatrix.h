@@ -5,14 +5,16 @@
 #include <vector>
 #include <stdlib.h>
 
-typedef std::vector< long double > Row;
+typedef std::vector< long double > Row; ///< single row
 
+/**
+ * @brief GaussianMatrix class
+ */
 class GaussianMatrix
 {
   public:
     GaussianMatrix(){}
     GaussianMatrix( std::vector< std::vector< long double > >  aData );
-    void setData( std::vector< std::vector< long double > >  aData );
     void overdetermined();
     void makeGaussian();
     void makeGaussian2();
@@ -30,7 +32,7 @@ class GaussianMatrix
     void multiply( int col );
     void subtractRow( int row );
     void makeDiagonalOnes();
-    std::vector< Row > mData;
+    std::vector< Row > mData; ///< matrix
 };
 
 #endif

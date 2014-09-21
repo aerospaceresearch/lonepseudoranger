@@ -23,6 +23,8 @@
 #include "Apollonius.h"
 
 std::vector< int > cluster( PositionsList, std::vector< std::vector< int > >, int );
+std::vector< std::vector< double > > delays; ///< delays
+
 /**  
  * processing of all collected signals
  */
@@ -35,10 +37,7 @@ void processSignalData()
     if( !lResultFile.is_open() )
     	std::cout << "ERROR: problem with file containing results" << std::endl;
 
-    std::cout << "mSignals.size() = " << mSignals.size() << std::endl;
-
     Combinations aCombinations;
-
     std::vector< Signal >::iterator iter;
     for( iter = mSignals.begin(); iter != mSignals.end(); ++iter )
     {
@@ -46,34 +45,22 @@ void processSignalData()
         long double timestamp = (*iter).getTimestamp();
 
         std::cout << "For satellite " << satId << " and sending time " << timestamp << " there are " << (*iter).getSize() << " GS" << std::endl;
-        if( (*iter).getSize() >= 4 ) 
-//        if( (*iter).getSize() >= 4 && timestamp<1000 ) //>=884 && timestamp<885 ) 
-        //if( (*iter).getSize() >= 4 && timestamp<1313 && timestamp>1312 ) 
-//        if( (*iter).getSize() >= 4 && timestamp>3220 && timestamp<3221 ) // 22 - b16
-    //    if( (*iter).getSize() >= 4 && timestamp>2264 && timestamp<2265 ) // 23 - b9 
+        if( (*iter).getSize() >= 4 && (*iter).getSize() < 64 ) 
         {
             auto time1 = std::chrono::high_resolution_clock::now();
             std::cout << std::endl << "***********************************************************************************" << std::endl;
             if( (*iter).getSize() < 4)
-                std::cout << "not taken sat" << (*iter).getSatId() << " with " << (*iter).getSize() << " gs" << std::endl;
+                std::cout << "Not taken sat" << (*iter).getSatId() << " with " << (*iter).getSize() << " gs" << std::endl;
             Stations mStations;
-            (*iter).convertSignalToStation( mStations );
+            (*iter).convertStationToSignal( mStations );
             std::vector< std::vector< int > > stationsComb;
-            
             PositionsList xyzr;
             int N = mStations.size();
-           // xyzr.addPositions( solveApol( satId, timestamp, mStations ) );
 
             if( N>6 )
             {
-                if( N<20 )
-                    std::cout << N << " " << (*iter).getTimestamp() << std::endl;
-                int k = N-2;
-                if( N<6 )
-                    k=4;
+                int k = std::max( N-2, 4 );
                 std::cout << "N=" << N << ", k=" << k << std::endl;
-//                std::cout << "For satellite " << satId << ", "<< N << " ground stations and time of sending signal " << timestamp << " I want to set of satellites of size: ";
-//                std::cin >> k;
 
                 stationsComb = aCombinations.getStationsCombinations( N, k );
                 std::vector< std::vector< int > >::iterator iterSt;
@@ -84,9 +71,7 @@ void processSignalData()
                     for( int i=0; i<k; ++i )
                     {
                         aStations.addStation( mStations.getStation( (*iterSt).at(i) ) );
-//                        std::cout << (*iterSt).at(i) << " ";
                     }
-            //        std::cout << std::endl;
                     xyzr.addPositions( solveApol( satId, timestamp, aStations, pos, false ) ); // pos - combination id
                     ++pos;
                 }
@@ -97,19 +82,14 @@ void processSignalData()
                 std::vector< int >::iterator itInt;
                 Stations selectedStations;
 
-                
-//                std::cout << "Taken combinations: ";
                 // selectedCombinations - combinations selected by clustering
                 for( itInt = selectedCombinations.begin(); itInt != selectedCombinations.end(); ++itInt )
                 {
-                    // *itInt - number of combination which should be taken
                     // from stationsComb
                     std::vector< std::vector< int > >::iterator combIter;
-                    //std::cout << std::endl << "combination " << *itInt << ": " ;
                     for( int counter = 0; counter < stationsComb.at(*itInt).size(); ++counter )
                     {
                         selectedGS.push_back( stationsComb.at(*itInt).at(counter) );
-                      //  std::cout << stationsComb.at(*itInt).at(counter) << " ";
                     }
                 }
                 std::vector< int >::iterator intIt2;
@@ -119,12 +99,11 @@ void processSignalData()
 
                 if( selectedGS.size() < N )
                 {
-                    std::cout << "************!!!!!!!!!!!!!!! NOT ALL OF STATIONS TAKEN!!!! "<< satId << ", time: " << timestamp << std::endl;
+                    std::cout << "Not all of stations taken!!! "<< satId << ", time: " << timestamp << std::endl;
                 }
                 std::cout << std::endl << "Selected stations: " << selectedGS.size() << "/" << N << " (" << timestamp << ")" << std::endl;
                 for( intIt2 = selectedGS.begin(); intIt2 != selectedGS.end(); ++intIt2 )
                 {
-//                    std::cout << (*intIt2) << " " ;
                     selectedStations.addStation( mStations.getStation( *intIt2 ) );
                 }
                 std::cout << std::endl;
@@ -138,57 +117,15 @@ void processSignalData()
             
                 std::cout << "Result without clustering: ";
                 solveApol( satId, timestamp, mStations );
-    //        }
-           
-           /* 
-            xyzr.printPositions();
-            for( int i=0; i<xyzr.size(); ++i )
+            }
+            else
             {
-                lResultFile << timestamp << " " << xyzr.getX( i ) << " " << xyzr.getY( i ) << " " << xyzr.getZ( i ) << "\n";
-            }*/
-        }
-        else
-        {
-            std::cout << "Not taken sat " << satId << " with " << (*iter).getSize() << " gs." << std::endl;
-            // TODO: trilateration for 3 gs
-        }
-    }
-    lResultFile.close();
-}
-}
-/*
-void stats( std::vector< std::tuple< int, double, double > > delays, std::vector< int > satellites )
-{
-    std::vector< int >::iterator satIt;
-    for( satIt = satellites.begin(); satIt != satellites.end(); ++satIt )
-    {
-        int satId = *satIt;
-        double min=10000, max=0, mean=0, sum=0;
-        int counter = 0;
-        std::vector< std::tuple< int, double, double > >::iterator it;
-        for( it=delays.begin(); it!=delays.end(); ++it )
-        {
-            if( std::get<0>( *it ) == satId )
-            {
-                double current_delay = std::get<2>( *it );
-                if( current_delay < min )
-                   min = current_delay;
-                if( current_delay > max )
-                   max = current_delay;
-                sum += current_delay;
-                ++counter;
+                std::cout << "Not taken sat " << satId << " with " << (*iter).getSize() << " gs." << std::endl;
             }
         }
-        std::cout << "For satellite " << satId << " min delay: " << min << ", max delay: " << max << ", mean delay: " << sum/counter << std::endl;
-        
+        lResultFile.close();
     }
-}*/
-
-std::vector< std::vector< double > > delays;
-/** loading data from file "stations.txt"
- *  @param lFileName a name of file which contains data
- *  @param mStations a contener of stations 
- */
+}
 
 /** loading data from file 
  *  @param name of file with data
@@ -202,14 +139,13 @@ void Reader::loadGSData( const char* lFileName )
     	std::cout << "ERROR: problem with file" << std::endl;
 
     double ax, ay, az, delay;
-    double at0, adt;
+    double at0, adt, at1;
     int satId = 0; 
     std::string op1;
-//    std::vector< std::tuple< int, double, double > > delays;
     std::vector< int > satellites;
-    while( lFile >> ax >> ay >> az >> adt >> at0 >> satId >> delay ) // >> at0 >> satId >> op1  )
+    while( lFile >> ax >> ay >> az >> at1 >> at0 >> satId >> delay ) // >> at0 >> satId >> op1  )
     {
-
+        adt = at1-at0;
         std::vector< std::vector< double > >::iterator itDelay = delays.begin();
         while( itDelay != delays.end() && (satId!=(*itDelay).at(0) || at0!=(*itDelay).at(1)) )
         {
@@ -222,18 +158,6 @@ void Reader::loadGSData( const char* lFileName )
             std::vector< double > vec = { satId, at0, delay };
             delays.push_back( vec );
         }
-        // check if satId is already in vector satellites
-    /*    std::vector< int >::iterator satIt = satellites.begin();
-        while( (*satIt) != satId && satIt!=satellites.end() )
-        {
-            ++satIt;
-        }
-
-        if( satIt==satellites.end() )
-            satellites.push_back( satId );
-        std::cout << lFileName << " " << at0 << ", x, y, z: " << ax << " " << ay << " " << az << std::endl;
-*/
-    //    std::cout << "loading signal " << satId << " " << at0 << std::endl;
         bool satKnown = false;
         std::vector< Signal >::iterator iter;
         for( iter = mSignals.begin(); !satKnown && iter != mSignals.end(); ++iter )
@@ -244,24 +168,22 @@ void Reader::loadGSData( const char* lFileName )
                 {
                     (*iter).addGroundStation( ax, ay, az, at0, adt, delay );
                 }
-                satKnown = true; // bez tego tez sie da
+                satKnown = true; 
             }
         }
-
         if( !satKnown )
         {
-            Signal mSignal;
-            mSignal.setSatId( satId );
-            mSignal.setTimestamp( at0 );
+            Signal mSignal( satId, at0 );
             mSignal.addGroundStation( ax, ay, az, at0, adt, delay ); 
             mSignals.push_back( mSignal );
         }
-  //      delays.push_back( std::make_tuple( satId, at0, op ) );
     }
-//    stats( delays, satellites );
     lFile.close();
 }
 
+/**
+ * @brief Printing statistics of delays
+ */
 void stats()
 {
     std::vector< std::vector< double > >::iterator itDelay;
@@ -279,7 +201,7 @@ void stats()
             if( current < min )
                 min = current;
         }
-        std::cout << "delay " << satId << " " << std::setprecision(20) << time << " " << min << " " << sum/((*itDelay).size()-2) << " " << max << std::endl;
+        std::cout << "Delay " << satId << " " << std::setprecision(20) << time << " " << min << " " << sum/((*itDelay).size()-2) << " " << max << std::endl;
     }
 }
 
@@ -310,12 +232,12 @@ void Reader::loadFromDirectory( char* lDirName )
 
             if( file.substr( file.size()-4, 4) == std::string(".gsd") )
             {
-    //            std::cout << "Processing file: " << file << std::endl;
+                std::cout << "Processing file: " << file << std::endl;
                 loadGSData( file.c_str() );          
             }
             else
             {
-      //          std::cout << "File " << file << " does not have proper format! " << std::endl;
+                std::cout << "File " << file << " does not have proper format! " << std::endl;
             }
 
         }

@@ -4,6 +4,9 @@
 #include "Def.h"
 #include "Combinations.h"
 
+/**
+ * @brief Reader class
+ */
 class Reader
 {
 public:

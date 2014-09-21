@@ -15,17 +15,6 @@ std::vector< long double > GaussianMatrix::getRow( int index )
     return mData.at(index);
 }
 
-// unused:
-void GaussianMatrix::setData( std::vector< std::vector< long double > >  aData )
-{
-    mData = aData;
-    if( mData.size() > 4 )
-    {
-        overdetermined();
-    }
-    makeGaussian();
-}
- 
 void GaussianMatrix::swapRows( int first, int second )
 {
     if( first == second )
@@ -40,10 +29,10 @@ int GaussianMatrix::findMaxRow( int col )
     int ret = col; 
     for( int i = col; i<getRowsNb(); ++i )
     {
-	if( abs(get(i,col)) > abs(get(ret,col)) )
-	{
-	  ret = i;
-	}
+	    if( abs(get(i,col)) > abs(get(ret,col)) )
+ 	    {
+	        ret = i;
+    	}
     }
     return ret;
 }
@@ -53,14 +42,14 @@ void GaussianMatrix::multiply( int col )
     long double coefficient;
     for( int i = 0; i<getRowsNb(); ++i )
     {
-      coefficient = get(i,col);
-      if( coefficient != 1 && coefficient != 0 )
-      {
-        for( int j=0; j<getColsNb(); ++j )
+        coefficient = get(i,col);
+        if( coefficient != 1 && coefficient != 0 )
         {
-          (mData.at(i)).at(j) = get(i,j)/coefficient;
+            for( int j=0; j<getColsNb(); ++j )
+            {
+                (mData.at(i)).at(j) = get(i,j)/coefficient;
+            }
         }
-      }
     }
 }
 
@@ -68,13 +57,13 @@ void GaussianMatrix::subtractRow( int row )
 {
     for( int i=0; i<getRowsNb(); ++i )
     {
-	if( i!=row && get(i,row)!=0 )
-	{
-	  for( int j=0; j<getColsNb(); ++j )
-	  {
-	    (mData.at(i)).at(j) = get(i,j) - get(row,j);
-	  }
-	}
+	    if( i!=row && get(i,row)!=0 )
+	    {
+	        for( int j=0; j<getColsNb(); ++j )
+	        {
+	            (mData.at(i)).at(j) = get(i,j) - get(row,j);
+    	    }
+	    }
     }
 }
 
@@ -83,14 +72,14 @@ void GaussianMatrix::makeDiagonalOnes()
     long double coefficient;
     for( int i = 0; i < mData.size(); ++i )
     {
-	if( get(i,i) != 0 && get(i,i) !=1 )
-	{
-	  coefficient = get(i,i);
-	  for( int j = 0; j < mData.at(0).size(); ++j )
-	  {
-	    (mData.at(i)).at(j) = get(i,j)/coefficient;
-	  }
-	}
+	    if( get(i,i) != 0 && get(i,i) !=1 )
+	    {
+	        coefficient = get(i,i);
+	        for( int j = 0; j < mData.at(0).size(); ++j )
+	        { 
+	            (mData.at(i)).at(j) = get(i,j)/coefficient;
+	        }
+    	}
     }
 }
 
@@ -108,7 +97,6 @@ void GaussianMatrix::overdetermined()
 {
     int newN = 4;
     int N = getRowsNb();
-  //  printData();
     long double A[N][4];
     long double b[N];
 
@@ -134,7 +122,9 @@ void GaussianMatrix::overdetermined()
     {
         ATb[i] = 0;
         for( int j=0; j<4; ++j )
+        {
             ATA[i][j] = 0;
+        }
     }
 
     for( int i=0; i<newN; ++i )
@@ -154,7 +144,6 @@ void GaussianMatrix::overdetermined()
         {
             ATb[i] = ATb[i] + A[k][i]*b[k];
         }
-
     }
 
     for( int i=0; i<newN; ++i )
@@ -165,31 +154,29 @@ void GaussianMatrix::overdetermined()
         }
         mData[i][4] = ATb[i];
     }
-
-  //  printData();
 }
 
 void GaussianMatrix::makeGaussian()
 {
-   for( int k=0; k<getRowsNb(); ++k )
-   {
+    for( int k=0; k<getRowsNb(); ++k )
+    {
        // Find pivot for column k:
        int iMaxPos = k;
        long double iMax = (mData.at(k)).at(k);
        for( int j=k; j<getRowsNb(); ++j )
        {
-           if( iMax < abs((mData.at(j)).at(k)) )
-           {
-               iMax = abs((mData.at(j)).at(k));
-               iMaxPos = j;
-           }
-       }
+            if( iMax < abs((mData.at(j)).at(k)) )
+            {
+                iMax = abs((mData.at(j)).at(k));
+                iMaxPos = j;
+            }
+        }
         if( iMax == 0 )
         {
-//            std::cout << "ERROR! MATRIX IS SINGULAR!" << std::endl;
             break;
         }
-        else{
+        else
+        {
             swapRows( iMaxPos, k );
             
             for( int i=k+1; i<getRowsNb(); ++i )
@@ -203,7 +190,6 @@ void GaussianMatrix::makeGaussian()
         }
    }
 
-   // '1' na diagonali
    for( int k=0; k<getRowsNb(); ++k )
    {
         if( (mData.at(k)).at(k) != 0 )
@@ -216,13 +202,12 @@ void GaussianMatrix::makeGaussian()
         }
    }
 
-   for( int k=getRowsNb()-2; k>=0; --k ) // start: przedostatni wiersz
+   for( int k=getRowsNb()-2; k>=0; --k ) 
    {
         for( int j=k+1; j<getRowsNb(); ++j )
         {
             if( (mData.at(k)).at(j) != 0 )
             {
-                // odjecie j-tego wiersza pomnozonego przez (mData.at(k)).at(j)
                 if( (mData.at(j)).at(j) != 0 )
                 {
                     long double temp = (mData.at(k)).at(j);
@@ -234,8 +219,6 @@ void GaussianMatrix::makeGaussian()
             }
         }
    }
-
-   //printData();
 }
 
 void GaussianMatrix::makeGaussian2()
@@ -243,13 +226,13 @@ void GaussianMatrix::makeGaussian2()
     int max_index;
     for( int i=0; i<getRowsNb(); ++i )
     {
-	max_index = findMaxRow( i );
+    	max_index = findMaxRow( i );
         if( max_index != i )
-	{
-	  swapRows( max_index, i );
-	}
-	multiply( i );
-	subtractRow(i);
+	    {
+    	    swapRows( max_index, i );
+	    }
+    	multiply( i );
+	    subtractRow(i);
     }
     makeDiagonalOnes();
 }
@@ -259,11 +242,11 @@ void GaussianMatrix::printData()
     std::cout << std::endl;
     for( int i=0; i<getRowsNb(); ++i )
     {
-	for( int j=0; j<getColsNb(); ++j )
-	{
-      std::cout.precision(15);
-	  std::cout << (mData.at(i)).at(j) << " " ;
-	}
+	    for( int j=0; j<getColsNb(); ++j )
+	    {
+          std::cout.precision(15);
+	      std::cout << (mData.at(i)).at(j) << " " ;
+    	}
 	std::cout << std::endl;
     }
 }

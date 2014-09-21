@@ -5,6 +5,9 @@
 #include <stdint.h>
 #include <vector>
 
+/**
+ * @brief Combinations class
+ */
 class Combinations
 {
   public:

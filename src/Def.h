@@ -10,8 +10,7 @@
 
 /// Row type
 typedef std::vector< long double > Row;
-/// Matrix type
-//typedef std::vector< Row > Matrix;
+
 /**
  * @brief Station class
  */
@@ -89,18 +88,20 @@ class Station
     double getZ() const { return z; }
 
     /**
-     * @brief Returns radius.
+     * @brief returns radius.
      * @return radius r
      */
     double getR() const { return r; }
 
+    /**
+     * @brief returns delay.
+     * @return delay
+     */
     double getDelay() const { return delay; }
     
-    void addToZ( int a )
-    {
-        z = z+a;
-    }
-
+    /**
+     * @brief Converting Station to Vector
+     */
     std::vector< double > stationToVector()
     {   
         std::vector< double > ret;
@@ -112,13 +113,13 @@ class Station
     }
 
   private:
-    double x;  ///< Coordinate x.
-    double y;  ///< Coordinate y.
-    double z;  ///< Coordinate z.
+    double x;       ///< Coordinate x.
+    double y;       ///< Coordinate y.
+    double z;       ///< Coordinate z.
     long double t;  ///< Time of receiving signal.
-    double r;  ///< Distance of vehicle from the station at time t-dt.
+    double r;       ///< Distance of vehicle from the station at time t-dt.
     long double dt; ///< Difference between time of receiving signal by ground station and sending by the vehicle.
-    double delay;
+    double delay;   ///< Delay of given signal.
 };
 
 /**
@@ -138,16 +139,17 @@ class Stations
      */
     void addStation( Station aStation )
     {
-//    	aStation.setR( mT );
         mStations.push_back( aStation );
- //       std::cout << "Stations::addStation(): mT=" << mT << ", R=" << mStations.back().getR() << std::endl;
     }
 
+    /**
+     * @brief Adding a single station.
+     * @param aStation a single station added to the storage
+     */
     void addStation( double ax, double ay, double az, long double at0, long double aR )
     {
         Station aStation( ax, ay, az, at0, aR );
         mStations.push_back( aStation );
-     //   std::cout << "Stations::addStation( 5xdouble ), r = " << aR << std::endl;
     }
 
     /**
@@ -202,6 +204,9 @@ class Stations
 	    std::cout << std::endl;
     }
 
+    /**
+     *  @brief Printing statistics of delays.
+     */
     void printDelayStats( int aSatId, double aTimestamp )
     {
         double minDelay = 100, maxDelay = 0, sumDelay = 0;
@@ -219,6 +224,9 @@ class Stations
  
     }
 
+    /**
+     * @brief Removing all stations from.
+     */
     void clear()
     {
         mStations.clear();
@@ -230,7 +238,6 @@ class Stations
 };
 
 typedef std::array< long double, 5 > Position; // xs,ys,zs,rs from Apollonius, combination id 
-//typedef std::array< long double, 4 > Position; // xs,ys,zs,rs from Apollonius 
 
 /**
  * @brief Class which stores list of positions.
@@ -340,8 +347,18 @@ class PositionsList
      * @param aIndex index of position
      */
     long double getR( int aIndex ) { return mPositions.at(aIndex).at(3); }
+
+    /**
+     * @brief Getting Id of combination.
+     * @param aIndex index of combination
+     */
     long double getCombId( int aIndex ) { return mPositions.at(aIndex).at(4); }
 
+    /**
+     * @brief Getting distance between two positions.
+     * @param aIndexFirst index of first position
+     * @param aIndexSecond index of second position
+     */
     long double getDistance( int aIndexFirst, int aIndexSecond )
     {
         long double distance = 0;
@@ -390,39 +407,55 @@ class PositionsList
 class Signal
 {
 public:
-    Signal(){} // pozbyc sie go
-    Signal( int satId, long double timestamp ) // ma zostac 
-    : mSatId( satId )
-    , mTimestamp( timestamp )
+    /**
+     * @brief Constructor.
+     * @param aSatId Id of satellite
+     * @param aTimestamp timestamp 
+     */
+    Signal( int aSatId, long double aTimestamp )  
+    : mSatId( aSatId )
+    , mTimestamp( aTimestamp )
     {
-    
     }
+
+    /**
+     * @brief Adding ground station to the signal
+     */
     void addGroundStation( double ax, double ay, double az, double ar )
     {
         mGroundStations.push_back( std::make_tuple( ax, ay, az, ar, 0 ) );
     }
 
+    /**
+     * @brief Adding ground station to the signal
+     */
     void addGroundStation( double ax, double ay, double az, long double at0, double adt, double aDelay=0 )
     {
-    //    std::cout << "Signal::addGroundStation(): mTimestamp = " << mTimestamp << std::endl;
         double clight = 299792458; // [m/s]
         double r = clight*adt;
         mGroundStations.push_back( std::make_tuple( ax, ay, az, r, aDelay ) );
-    //    std::cout << "Signal::addGroundStation(): r = " << r << std::endl;
     }
 
-    void convertSignalToStation( Stations& aStations )
+    /**
+     * @brief Converting station to signal
+     * @param aStations station
+     */
+    void convertStationToSignal( Stations& aStations )
     {
-        // tuple< x, y, z, r, delay
         std::vector< std::tuple< double, double, double, double, double > >::iterator it;
         for( it = mGroundStations.begin(); it != mGroundStations.end(); ++it )
         {
-      //      std::cout << "Signal::convertSignalToStation(): " << std::get<3>(*it) << std::endl;
             Station lStation( std::get<0>(*it), std::get<1>(*it), std::get<2>(*it), mTimestamp, std::get<3>(*it), std::get<4>(*it) );
             aStations.addStation( lStation );
         }
     }
 
+    /** 
+     * @brief Information if given position is already known
+     * @param ax coordinate x of given position
+     * @param ax coordinate y of given position
+     * @param ax coordinate z of given position
+     */
     bool positionKnown ( double ax, double ay, double az )
     {
         bool isKnown = false;
