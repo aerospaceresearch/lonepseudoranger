@@ -1,0 +1,17 @@
+lonepreudoranger - tutorial
+
+Required installations:
+- CMake
+
+Optional installations:
+- Doxygen - documentation
+- Marble - animations
+
+
+COMPILATION
+Commands:
+1) cmake PATH_TO_THE_MAIN_FOLDER
+2) make
+
+Run application:
+./lonepseudoranger -d PATH_TO_DIRECTORY_WITH_GSD_FILES
