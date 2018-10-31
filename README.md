@@ -1,12 +1,21 @@
-lonepseudoranger
-================
-the trilateration software for the Distributed Ground Station Network
+<h1 align="center">
+  lonepseudoranger
+</h1>
+<h4 align="center">
+  the trilateration software for the Distributed Ground Station Network
+</h4>
 
-How to build project on Linux? 
-1. Create folder for the build (e.g. 'build').
-2. Go to this folder and call 'cmake path .' where path is the path to the project. 
-3. Call 'make'.
-4. Application is ready to use. 
+<ol>
+  <h5> How to build project on Linux? </h5>
+    <li> Create folder for the build (e.g. 'build'). </li>
+    <li> Go to this folder and call 'cmake path .' where path is the path to the project. </li> 
+    <li> Call 'make'. </li>
+    <li> Application is ready to use. </li> 
+</ol>
+<ol>
+  <h5> How to build project on Windows? </h5>
+    <li> Execute the code in Dev c++. </li>
+    <li> A .exe file will be generated. </li>
+    <li> Application is ready to use. </li>
+</ol>
 
-How to build project on Windows?
-A .exe is generated e.g. after execution of the code in the Dev-C++.
